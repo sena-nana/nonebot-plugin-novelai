@@ -1,9 +1,9 @@
 # 魔法崩坏骰娘+TRPGLOG插件
 ## 依赖
-以下依赖需自行pip安装
+如直接下载到插件文件夹，以下依赖需自行pip安装，通过nb或pip安装不需要
 
 1. numpy
-2. notion-py
+2. notion
 ## 配置文件
 
 1. superuser：（nb内置参数）你的qq号
