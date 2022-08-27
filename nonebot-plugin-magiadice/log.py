@@ -4,7 +4,7 @@ from nonebot.params import CommandArg
 from .logger import Logger
 from nonebot import get_driver
 import time
-superuser = get_driver().config.master
+superuser = get_driver().config.superusers[0]
 sendtomaster = get_driver().config.trpgsendtomaster
 loglist = {}  # FIXME 配置文件化+启动时自动载入
 

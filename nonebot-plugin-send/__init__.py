@@ -17,7 +17,7 @@ async def send_receive(bot: Bot, event: GroupMessageEvent, args: Message = Comma
         'group_id': event.group_id,
     })
     group_name = group['group_name']
-    superuser = get_driver().config.master
+    superuser = get_driver().config.superusers[0]
     timenow = time.strftime('%Y-%m-%d %H:%M:%S', time.localtime())
     sendmsg = timenow+'\n群聊：'+group_name+'\n发送者：'+name+'\n'+args_in
     await bot.call_api('send_msg', **{

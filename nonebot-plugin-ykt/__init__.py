@@ -8,7 +8,7 @@ username = get_driver().config.username
 password = get_driver().config.password
 url = 'https://changjiang.yuketang.cn/v2/web/index'
 scheduler = require("nonebot_plugin_apscheduler").scheduler
-superuser = get_driver().config.master
+superuser = get_driver().config.superusers[0]
 async def send_success(lesson,meeting,video):
     for bot in nonebot.get_bots().values():
         if meeting:
