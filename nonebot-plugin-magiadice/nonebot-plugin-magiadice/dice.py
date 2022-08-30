@@ -2,6 +2,7 @@ from nonebot import on_command
 from nonebot.adapters.onebot.v11 import Bot, GroupMessageEvent, Message,MessageSegment
 from nonebot.params import CommandArg
 from numpy import random
+
 import json
 from .log import botlog
 import os
@@ -10,9 +11,7 @@ help = on_command(".mhelp", priority=5)
 sc = on_command(".msc", priority=5)
 rd = on_command(".rd", priority=5)
 ra = on_command(".ra", priority=5)
-
 datapath = 'data\magia\dailycd.json'
-
 
 def rd_for(dice, num):
     sum = 0
@@ -136,23 +135,31 @@ async def rd_receive(event: GroupMessageEvent, args: Message = CommandArg()):
     tmp = rd_(args)
     name = event.get_user_id()
     str = f"的掷骰结果为{tmp}"
-    await botlog(event.group_id, name+str)#TODO QQ号改为昵称
+    await botlog(event.group_id, event.sender.nickname,str)#TODO QQ号改为昵称
     await rd.finish(MessageSegment.at(name)+str)
 
 
 @ra.handle()
 async def ra_receive(event: GroupMessageEvent, args: Message = CommandArg()):
     if args:
-        args = args.extract_plain_text()
+        args = args.extract_plain_text().strip().split()
     else:
         await rd.finish(f"只有知道主人的技能值，月月才能计算出来喵！")
-    _, result = ra_(args)
     name = event.get_user_id()
-    message = f'的检定结果是：'+result
-    await botlog(event.group_id, name+message)
+    if len(args)==1:
+        args=args[0]
+        _, result = ra_(args)
+        message = f'的检定结果是：'+result
+    elif len(args)==2:
+        attr,args=args[:2]
+        _, result = ra_(args)
+        message = f'的{attr}检定结果是：'+result
+    await botlog(event.group_id, event.sender.nickname,message)
     await ra.finish(MessageSegment.at(name)+message)
+        
 #TODO 彻底重写dice模块
 #TODO 加入coc基本指令支持
 #TODO 加入dnd基本指令支持
 #TODO 加入st基本指令支持
-#TODO 加入属性值支持
+#TODO 保存属性值支持
+#TODO Help重构

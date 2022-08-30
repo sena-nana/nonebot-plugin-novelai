@@ -1,5 +1,5 @@
 import time
-from notion.block import TextBlock, PageBlock, DividerBlock, NumberedListBlock, ImageBlock
+from notion.block import TextBlock, PageBlock, DividerBlock, NumberedListBlock, ImageBlock,QuoteBlock
 from datetime import datetime
 import asyncio
 from notion.client import NotionClient
@@ -7,6 +7,7 @@ from nonebot import get_driver
 import urllib.request
 import os
 import imghdr
+from wcwidth import wcswidth
 
 token = get_driver().config.token
 client = NotionClient(token)
@@ -30,6 +31,21 @@ class Logger():
             await self.login(sender, 'KP')
         else:
             await self.logdown(sender)
+            
+    async def logdown(self, id):
+        basepage.children
+        try:
+            self.page = await asyncio.to_thread(client.get_block, id)
+        except:
+            return '记录恢复失败'
+        self.player = {}
+        for child in self.page.children[0].children:
+            name, sender = child.title.split(':')
+            color = child.color
+            width=wcswidth(sender)+2
+            self.player[sender] = [name, color,width]
+        self.createtime = time.time()
+        print(self.player)
 
     async def logon(self):
         await asyncio.to_thread(self.page.children.add_new, TextBlock, title='玩家信息:')
@@ -44,32 +60,31 @@ class Logger():
                 color = self.colorlist.pop()
             else:
                 return '玩家人数超出最大值了喵！'
-            self.player[sender] = [name, color]
+            width=wcswidth(sender)+2
+            self.player[sender] = [name, color,width]
 
             await asyncio.to_thread(self.page.children[0].children.add_new, TextBlock, title=f'{name}:{sender}', color=color)
             return f'{name}({sender})已加入游戏！'
 
     async def logup_text(self, sender, message):
-        match message[0]:
-            case '(':
-                ot = True
-            case '（':
-                ot = True
-            case '.':
-                return False
-            case _:
-                ot = False
-        if sender:
-            text = '<'+self.player[sender][0]+'>'+message
-            if ot:
-                await asyncio.to_thread(self.page.children.add_new, TextBlock, title=text, color='gray')
-            else:
-                await asyncio.to_thread(self.page.children.add_new, TextBlock, title=text, color=self.player[sender][1])
-        else:
-            text = f'<BOT>'+message
+        if sender in self.player:
+            text = self.player[sender][0]+': '+message.replace(r'\n',r'\n'+r' '*self.player[sender][2])
+            match message[0]:
+                case '('|'（':
+                    await asyncio.to_thread(self.page.children.add_new, TextBlock, title=text, color='gray')
+                case '"'|'“':
+                    await asyncio.to_thread(self.page.children.add_new, TextBlock, title=text, italic='True')
+                case '['|'【':
+                    await asyncio.to_thread(self.page.children.add_new, QuoteBlock, title=message[1:-1])
+                case '.'|'。':
+                    return False
+                case _:
+                    await asyncio.to_thread(self.page.children.add_new, TextBlock, title=text, color=self.player[sender][1])
+        elif not sender:
+            text = f'BOT: '+message
             await asyncio.to_thread(self.page.children.add_new, TextBlock, title=text, color='brown')
 
-    async def logup_image(self, url):
+    async def logup_image(self, url,text):
         filepath = dirs+str(time.time())
         await asyncio.to_thread(urllib.request.urlretrieve, url, filepath)
         type = imghdr.what(filepath)
@@ -78,15 +93,6 @@ class Logger():
         image = await asyncio.to_thread(self.page.children.add_new, ImageBlock)
         await asyncio.to_thread(image.upload_file, newpath)
         os.remove(newpath)
-
-    async def logdown(self, id):
-        self.page = await asyncio.to_thread(client.get_block, id)
-        self.player = {}
-        for child in self.page.children[0].children:
-            sender, name = child.title.split(':')
-            color = child.color
-            self.player[sender] = [name, color]
-        self.createtime = time.time()
 
     async def intronew(self, data):
         await asyncio.to_thread(self.page.children[1].children.add_new, NumberedListBlock, title=data)

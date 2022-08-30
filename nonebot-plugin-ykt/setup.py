@@ -3,7 +3,7 @@ from setuptools import setup
 setup(
     name='nonebot_plugin_ykt',
     packages=['nonebot-plugin-ykt'],
-    version='0.1.2',
+    version='0.1.3',
     description=(
         '一个基于nonebot的雨课堂自动签到插件'
     ),

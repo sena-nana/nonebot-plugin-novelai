@@ -4,11 +4,12 @@ import nonebot
 from nonebot import on_command
 from nonebot import get_driver
 from nonebot.adapters.onebot.v11 import Bot
+import asyncio
 username = get_driver().config.username
 password = get_driver().config.password
 url = 'https://changjiang.yuketang.cn/v2/web/index'
 scheduler = require("nonebot_plugin_apscheduler").scheduler
-superuser = get_driver().config.superusers[0]
+superusers = get_driver().config.superusers
 async def send_success(lesson,meeting,video):
     for bot in nonebot.get_bots().values():
         if meeting:
@@ -17,10 +18,12 @@ async def send_success(lesson,meeting,video):
             message = lesson[0]+" 签到完成了喵！当前课程有视频直播喵！"
         else:
             message = lesson[0]+" 签到完成了喵！"
-        await bot.call_api('send_msg', **{
-            'message': message,
-            'user_id': superuser
-        })
+        for superuser in superusers:
+            await bot.call_api('send_msg', **{
+                'message': message,
+                'user_id': superuser
+            })
+            asyncio.sleep(5)
 
 
 

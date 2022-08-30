@@ -3,7 +3,7 @@ from setuptools import setup
 setup(
     name='nonebot_plugin_send',
     packages=['nonebot-plugin-send'],
-    version='0.1.2',
+    version='0.1.3',
     description=(
         '一个基于nonebot的反馈通知插件'
     ),

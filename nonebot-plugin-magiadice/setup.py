@@ -3,7 +3,7 @@ from setuptools import setup
 setup(
     name='nonebot_plugin_magiadice',
     packages=['nonebot-plugin-magiadice'],
-    version='0.1.2',
+    version='0.2.0',
     description=(
         '一个基于nonebot的跑团LOG插件'
     ),
