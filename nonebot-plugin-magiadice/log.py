@@ -1,10 +1,14 @@
 import asyncio
-from nonebot import on_command, on_message
+from nonebot import on_command, on_message,require
 from nonebot.adapters.onebot.v11 import Bot, GroupMessageEvent, Message
 from nonebot.params import CommandArg
 from .logger import Logger
 from nonebot import get_driver
 import time
+try:
+    from mutsukiutils import sendtosuperuser
+except:
+    from ..mutsukiutils import sendtosuperuser
 superusers = get_driver().config.superusers
 sendtomaster = get_driver().config.trpgsendtomaster
 loglist = {}  # FIXME 配置文件化+启动时自动载入
@@ -149,19 +153,8 @@ async def botlog(groupid, sender,message):
 
 async def masteron(bot, event):
     if sendtomaster:
-        for superuser in superusers:
-            await bot.call_api('send_msg', **{
-                'message': f'{event.group_id}开始记录数据：'+loglist[event.group_id].page.id.replace("-", ''),
-                'user_id': superuser,
-            })
-            asyncio.sleep(5)
-
+        await sendtosuperuser(f'{event.group_id}开始记录数据：'+loglist[event.group_id].page.id.replace("-", ''))
 
 async def masteroff(bot, event, id):
     if sendtomaster:
-        for superuser in superusers:
-            await bot.call_api('send_msg', **{
-                'message': f'{event.group_id}结束记录数据：{id}',
-                'user_id': superuser,
-            })
-            asyncio.sleep(5)
+        await sendtosuperuser(f'{event.group_id}结束记录数据：{id}')

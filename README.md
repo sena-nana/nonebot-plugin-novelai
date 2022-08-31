@@ -17,3 +17,5 @@ Send插件：[![send](https://img.shields.io/pypi/dm/nonebot_plugin_send)](https
 大部分没搓完，只是能用的程度。
 
 使用方式具体看插件的README
+
+全部使用的话，可以下载压缩包后将MutsukiBot目录路径加入bot的toml文件中plugin_dir中

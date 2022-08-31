@@ -1,31 +1,23 @@
 from nonebot import require
 from playwright.async_api import async_playwright
-import nonebot
 from nonebot import on_command
 from nonebot import get_driver
-from nonebot.adapters.onebot.v11 import Bot
-import asyncio
+try:
+    from mutsukiutils import sendtosuperuser
+except:
+    from ..mutsukiutils import sendtosuperuser
 username = get_driver().config.username
 password = get_driver().config.password
 url = 'https://changjiang.yuketang.cn/v2/web/index'
 scheduler = require("nonebot_plugin_apscheduler").scheduler
-superusers = get_driver().config.superusers
 async def send_success(lesson,meeting,video):
-    for bot in nonebot.get_bots().values():
-        if meeting:
-            message = lesson[0]+" 有会议喵！"+meeting[0]
-        elif video:
-            message = lesson[0]+" 签到完成了喵！当前课程有视频直播喵！"
-        else:
-            message = lesson[0]+" 签到完成了喵！"
-        for superuser in superusers:
-            await bot.call_api('send_msg', **{
-                'message': message,
-                'user_id': superuser
-            })
-            asyncio.sleep(5)
-
-
+    if meeting:
+        message = lesson[0]+" 有会议喵！"+meeting[0]
+    elif video:
+        message = lesson[0]+" 签到完成了喵！当前课程有视频直播喵！"
+    else:
+        message = lesson[0]+" 签到完成了喵！"
+    await sendtosuperuser(message)
 
 async def yktcheckin():
     async with async_playwright() as p:
