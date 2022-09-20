@@ -8,8 +8,7 @@ import time
 try:
     from mutsukiutils import sendtosuperuser
 except:
-    from ..mutsukiutils import sendtosuperuser
-superusers = get_driver().config.superusers
+    from ...mutsukiutils import sendtosuperuser
 sendtomaster = get_driver().config.trpgsendtomaster
 loglist = {}  # FIXME 配置文件化+启动时自动载入
 
@@ -34,7 +33,7 @@ KP发送.log on指令开始记录
 # TODO 通过图片生成配置
 # TODO 完善使用说明
 # TODO 支持删除记录
-@log.handle()
+@log.handle()# TODO 使用拆包方式精简代码
 async def log_(bot: Bot, event: GroupMessageEvent, args: Message = CommandArg()):
     list_str = args.extract_plain_text().strip().split()
     match len(list_str):

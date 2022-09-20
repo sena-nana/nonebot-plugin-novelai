@@ -4,10 +4,14 @@ from datetime import datetime
 import asyncio
 from notion.client import NotionClient
 from nonebot import get_driver
-import urllib.request
 import os
+from io import BytesIO
 import imghdr
 from wcwidth import wcswidth
+import aiohttp
+from patch import upload_file_image
+ImageBlock.upload_file_image=upload_file_image
+#TODO NEEDTEST
 
 token = get_driver().config.token
 client = NotionClient(token)
@@ -52,7 +56,7 @@ class Logger():
         await asyncio.to_thread(self.page.children.add_new, TextBlock, title='模组信息:')
         await asyncio.to_thread(self.page.children.add_new, DividerBlock)
 
-    async def login(self, sender, name):
+    async def login(self, sender, name):# TODO 昵称自动设置群名片，群名片显示状态+识别卡功能
         if sender in self.player:
             return f'{sender}已经在游戏中了！'
         else:
@@ -84,15 +88,16 @@ class Logger():
             text = f'BOT: '+message
             await asyncio.to_thread(self.page.children.add_new, TextBlock, title=text, color='brown')
 
-    async def logup_image(self, url,text):
-        filepath = dirs+str(time.time())
-        await asyncio.to_thread(urllib.request.urlretrieve, url, filepath)
-        type = imghdr.what(filepath)
-        newpath = dirs+str(time.time())+'.'+type
-        os.rename(filepath, newpath)
+    async def logup_image(self, url,text=None):
+        async with aiohttp.ClientSession() as session:
+            async with session.get(url) as resp:
+                imgbytes=await resp.read()
+        img=BytesIO(imgbytes)
+        type = imghdr.what(img)
         image = await asyncio.to_thread(self.page.children.add_new, ImageBlock)
-        await asyncio.to_thread(image.upload_file, newpath)
-        os.remove(newpath)
+        if not text:
+            text=datetime.now().strftime(f"%Y%m%d%H%M%S")
+        await asyncio.to_thread(image.upload_file_image,img,text,type)
 
     async def intronew(self, data):
         await asyncio.to_thread(self.page.children[1].children.add_new, NumberedListBlock, title=data)

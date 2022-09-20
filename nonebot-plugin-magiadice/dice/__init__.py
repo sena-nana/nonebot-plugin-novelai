@@ -4,7 +4,7 @@ from nonebot.params import CommandArg
 from numpy import random
 
 import json
-from .log import botlog
+from ..log import botlog
 import os
 shuxing = on_command(".magia", priority=5)
 help = on_command(".mhelp", priority=5)
@@ -94,8 +94,9 @@ async def handle_receive(event: GroupMessageEvent):
 
 @help.handle()
 async def help_receive():
-    await help.finish(f"《魔法崩坏》规则跑团Bot指令列表\n快速车卡  .magia\nSC检定    .msc 情感值 成功rd 失败rd\n基础指令：\n.ra x x为技能值\n.rd xdy+z x为骰子个数，y为骰子面数，z为固定值，支持省略写法.rdy")# TODO 添加游戏规则地址
-    #TODO 将帮助指令提取为全局插件
+    await help.finish(f"《魔法崩坏》规则跑团Bot指令列表\n快速车卡  .magia\nSC检定    .msc 情感值 成功rd 失败rd\n基础指令：\n.ra x x为技能值\n.rd xdy+z x为骰子个数，y为骰子面数，z为固定值，支持省略写法.rdy")
+    # TODO 添加游戏规则地址
+    # TODO 将帮助指令提取为全局插件
 
 
 @sc.handle()
