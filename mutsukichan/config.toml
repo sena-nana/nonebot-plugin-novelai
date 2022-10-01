@@ -1,0 +1,7 @@
+name = '梦月酱'
+description = '梦月Bot基础但是并不需要发布为插件的功能'
+version = '0.1.3'
+isreleased = true
+updatedate = '20220927'
+keywords = []
+install_requires = ['rtoml']

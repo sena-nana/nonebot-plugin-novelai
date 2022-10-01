@@ -130,3 +130,6 @@ dmypy.json
 
 setup.py
 test/
+.pdm.toml
+pdm.lock
+pyproject.toml

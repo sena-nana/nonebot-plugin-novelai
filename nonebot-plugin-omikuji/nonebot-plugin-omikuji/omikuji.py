@@ -27,7 +27,8 @@ async def handle_receive(bot: Bot, event: GroupMessageEvent):
         lucky_type=checkluck(luckypoint)
         # image=r"data/omikuji/"+lucky_type
         # omikuji.send(f'[CQ:at,qq={id}]既然如此就勉为其难为你抽一签nya[CQ:image,file={image}]')
-        message = f'[CQ:at,qq={name}]既然如此就勉为其难为主人抽一签喵\n今天的运势是{lucky_type}喵！\n幸运数字是{luckypoint}喵！'
+        message = f'[CQ:at,qq={name}]既然如此就勉为其难为主人抽一签喵\n今天的运势是{lucky_type}喵！\n幸运数字是{luckypoint}喵！'#TODO 重构结构
+        # TODO 加入雀，跑团等不同回复
     else:
         message = f'[CQ:at,qq={name}]今天主人已经抽过签了喵!'
     await bot.call_api('send_'+send_type+'_msg', **{
