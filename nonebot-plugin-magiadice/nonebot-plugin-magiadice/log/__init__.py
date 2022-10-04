@@ -30,6 +30,7 @@ KP发送.log on指令开始记录
 # TODO 通过图片生成配置
 # TODO 完善使用说明
 # TODO 支持删除记录
+# TODO 加入ob指令
 @log.handle()# TODO 使用拆包方式精简代码
 async def log_(bot: Bot, event: GroupMessageEvent, args: Message = CommandArg()):
     list_str = args.extract_plain_text().strip().split()

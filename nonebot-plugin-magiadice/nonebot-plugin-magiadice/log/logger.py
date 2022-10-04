@@ -9,9 +9,6 @@ from io import BytesIO
 import imghdr
 from wcwidth import wcswidth
 import aiohttp
-from patch import upload_file_image
-ImageBlock.upload_file_image=upload_file_image
-#TODO NEEDTEST
 
 token = get_driver().config.token
 client = NotionClient(token)

@@ -1,10 +1,8 @@
 from nonebot import on_command
 from nonebot.matcher import Matcher
-from nonebot.adapters.onebot.v11 import Bot, GroupMessageEvent
 import random
 from nonebot.params import ArgPlainText, CommandArg
 import datetime
-import time
 
 death=on_command('.death',priority=5, aliases={'查看命运'})
 way=[
@@ -22,7 +20,8 @@ urara=[
     '百度',
     '狐仙',
     '御神签',
-    '水晶'
+    '水晶',
+    '阿波卡利斯'
 ]
 @death.handle()
 async def death_receive(matcher:Matcher,args=CommandArg()):
@@ -48,8 +47,5 @@ async def _(args=ArgPlainText('age')):
         death.send(f'喵只认识数字哦')
     deathway=random.choice(way)
     deathyear = datetime.date.today().year-age+deathage
-    #start=time.mktime((deathyear,1,1,0,0,0,0,0,0))
-    #end=time.mktime((deathyear,12,31,23,59,59,0,0,0))
-    #deathtime=time.strftime("%Y年%m月%d日",time.localtime(random.randint(start,end)))
     uraraway=random.choice(urara)
-    await death.finish(f'喵呜，让我看看……\n你在{deathyear}年会因为{deathway}而死，{uraraway}是这么说的喵！')
+    await death.finish(f'喵呜，让我看看……\n你在{deathyear}年会因为{deathway}被撕卡，{uraraway}如是说喵！')
