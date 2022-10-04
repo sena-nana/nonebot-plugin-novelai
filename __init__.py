@@ -1,9 +1,14 @@
 from pathlib import Path
 import nonebot
-_sub_plugins = set()
-currentpath=Path.cwd()
+from nonebot.plugin import PluginMetadata
+__plugin_meta__= PluginMetadata(
+    name='梦月Bot',
+    description='<记得起名>',
+    usage='',
+)
+currentpath=Path(__file__).parent
 for i in currentpath.iterdir():
     modulename=i.parts[-1]
     plugin=i/modulename
     if plugin.exists():
-        _sub_plugins |= nonebot.load_plugin(plugin.resolve())
+        nonebot.load_plugins(i)

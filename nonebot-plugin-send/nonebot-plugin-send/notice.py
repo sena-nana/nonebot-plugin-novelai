@@ -5,10 +5,7 @@ from nonebot.adapters.onebot.v11 import Bot,PrivateMessageEvent
 import asyncio
 send = on_command('.send', priority=5)
 notice = on_command('.notice', priority=5, permission=SUPERUSER)
-try:
-    from mutsukiutils import sendtosuperuser
-except:
-    from ..mutsukiutils import sendtosuperuser
+
 @notice.handle()
 async def notice_receive(bot: Bot, event: PrivateMessageEvent):
     message = event.raw_message.replace('.notice', '', 1).strip().strip('\n')

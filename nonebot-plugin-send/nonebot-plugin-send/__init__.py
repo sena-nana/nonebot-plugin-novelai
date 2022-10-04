@@ -4,5 +4,4 @@ __plugin_meta__= PluginMetadata(
     name='send',
     description='通知和反馈基本功能',
     usage='',
-    version='0.1.4 PreRelease'
 )

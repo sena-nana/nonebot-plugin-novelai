@@ -5,10 +5,7 @@ from nonebot.params import CommandArg
 from .logger import Logger
 from nonebot import get_driver
 import time
-try:
-    from mutsukiutils import sendtosuperuser
-except:
-    from ...mutsukiutils import sendtosuperuser
+from ..utils import sendtosuperuser
 sendtomaster = get_driver().config.trpgsendtomaster
 loglist = {}  # FIXME 配置文件化+启动时自动载入
 

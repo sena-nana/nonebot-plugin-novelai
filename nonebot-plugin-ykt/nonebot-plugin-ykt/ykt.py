@@ -2,10 +2,7 @@ from nonebot import require
 from playwright.async_api import async_playwright
 from nonebot import on_command
 from nonebot import get_driver
-try:
-    from mutsukiutils import sendtosuperuser
-except:
-    from ..mutsukiutils import sendtosuperuser
+from .utils import sendtosuperuser
 username = get_driver().config.username
 password = get_driver().config.password
 url = 'https://changjiang.yuketang.cn/v2/web/index'

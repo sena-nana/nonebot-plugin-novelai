@@ -5,10 +5,7 @@ from nonebot.adapters.onebot.v11 import Bot, Message, GroupMessageEvent
 from nonebot.params import CommandArg
 send = on_command('.send', priority=5)
 notice = on_command('.notice', priority=5, permission=SUPERUSER)
-try:
-    from mutsukiutils import sendtosuperuser
-except:
-    from ..mutsukiutils import sendtosuperuser
+from .utils import sendtosuperuser
 
 @send.handle()
 async def send_receive(bot: Bot, event: GroupMessageEvent, args: Message = CommandArg()):
