@@ -21,7 +21,7 @@ limit_list = []
 async def txt2pix_handle(event: GroupMessageEvent, args: Message = CommandArg()):
     nowtime = time.time()
     if (nowtime-cd.get(event.user_id, 0)) < config.novelai_cd:
-        txt2pix.finish(f"你冲的太快啦，请休息一下吧")
+        await txt2pix.finish(f"你冲的太快啦，请休息一下吧")
     else:
         cd[event.user_id] = nowtime
     message_raw = args.extract_plain_text().replace("，", ",").split("-")
@@ -86,8 +86,8 @@ async def run_txt2pix(x):
                 },
             )
     if not x:
-        limit_list.pop()
-        if len(limit_list):
+        limit_list.pop(0)
+        if len(limit_list)>0:
             await run_txt2pix(None)
         else:
             gennerating = False
