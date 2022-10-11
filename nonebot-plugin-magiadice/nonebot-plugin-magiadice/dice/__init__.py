@@ -164,3 +164,4 @@ async def ra_receive(event: GroupMessageEvent, args: Message = CommandArg()):
 #TODO 加入st基本指令支持
 #TODO 保存属性值支持
 #TODO Help重构
+#TODO 加入ob猜点系统

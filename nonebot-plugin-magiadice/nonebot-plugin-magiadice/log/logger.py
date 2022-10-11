@@ -91,10 +91,14 @@ class Logger():
                 imgbytes=await resp.read()
         img=BytesIO(imgbytes)
         type = imghdr.what(img)
+        newpath = dirs+str(time.time())+'.'+type
+        with open(newpath,'wb') as f:
+            f.write(img)
         image = await asyncio.to_thread(self.page.children.add_new, ImageBlock)
         if not text:
             text=datetime.now().strftime(f"%Y%m%d%H%M%S")
-        await asyncio.to_thread(image.upload_file_image,img,text,type)
+        await asyncio.to_thread(image.upload_file, newpath)
+        os.remove(newpath)
 
     async def intronew(self, data):
         await asyncio.to_thread(self.page.children[1].children.add_new, NumberedListBlock, title=data)
