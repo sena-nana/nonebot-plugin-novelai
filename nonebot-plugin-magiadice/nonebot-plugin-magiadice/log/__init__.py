@@ -9,7 +9,7 @@ from ..utils import sendtosuperuser
 sendtomaster = get_driver().config.trpgsendtomaster
 loglist = {}  # FIXME 配置文件化+启动时自动载入
 
-logger = on_message(priority=1, block=False)
+logger = on_message(priority=9, block=False)
 log = on_command(".log")
 
 async def loghelp():

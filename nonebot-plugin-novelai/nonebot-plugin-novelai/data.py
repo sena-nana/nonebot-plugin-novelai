@@ -1,8 +1,8 @@
 
 from nonebot import get_driver
-
+from .config import config
 lowQuality = 'lowres, bad anatomy, bad hands, text, error, missing fingers, extra digit, fewer digits, cropped, worst quality, low quality, normal quality, jpeg artifacts, signature, watermark, username, blurry,nsfw,'
-basetag="{{masterpiece}},extremely detailed,{best quality},{highres},original,1 girl,[an extremely delicate and beatuiful]"
+basetag="masterpiece,extremely detailed,best quality,"
 token=get_driver().config.novelai_token
 header={
         "authorization":'Bearer '+token,
@@ -14,7 +14,7 @@ header={
     }
 def txt2pix_body(seed,input,map):
     return {
-            "input":input+basetag,
+            "input":input+basetag+config.novelai_tag,
             "model":"safe-diffusion",
             "parameters":{
                 "width":map[1],
