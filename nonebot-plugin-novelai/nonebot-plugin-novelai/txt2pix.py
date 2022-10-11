@@ -1,5 +1,6 @@
 from nonebot import on_command
-from nonebot.adapters.onebot.v11 import MessageEvent,MessageSegment
+from nonebot.params import CommandArg
+from nonebot.adapters.onebot.v11 import MessageSegment,Message
 from .data import *
 import aiohttp
 import base64
@@ -9,11 +10,11 @@ path=Path("data/novelai/output").resolve()
 txt2pix=on_command(".aidraw",aliases={"文本生图","咏唱"})
 
 @txt2pix.handle()
-async def txt2pix_handle(event: MessageEvent):
+async def txt2pix_handle(args: Message = CommandArg()):
     map=[640,640]
     input=""
     seed_raw=None
-    message_raw=event.message.extract_plain_text().replace("，",",").split("-")
+    message_raw=args.extract_plain_text().replace("，",",").split("-")
     for i in message_raw:
         match i:
             case "square"|"s"|"S":
@@ -38,6 +39,7 @@ async def txt2pix_handle(event: MessageEvent):
             img_bytes=img.split("data:")[1]
             img=base64.b64decode(img_bytes)
             img_name=input+str(seed)+".png"
+            path.mkdir(parents=True, exist_ok=True)
             with open(path/img_name, "wb") as f:
                     f.write(img)
             message=MessageSegment.image("base64://"+img_bytes)
