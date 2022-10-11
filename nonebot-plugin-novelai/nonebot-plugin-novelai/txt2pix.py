@@ -46,19 +46,20 @@ async def txt2pix_handle(event: GroupMessageEvent, args: Message = CommandArg())
     seed = seed_raw or int(time.time())
     if config.novelai_limit:
         limit_list.append((event.group_id, event.user_id, map, seed, input))
+        await txt2pix.send(f"排队中，你的前面还有{len(limit_list)-1}人")
         if not gennerating:
-            await txt2pix.send(f"排队中，你的前面还有{len(limit_list)-1}人")
             await run_txt2pix(None)
     else:
         await run_txt2pix((event.group_id, event.user_id, map, seed, input))
 
 
 async def run_txt2pix(x):
-    groupid, userid, map, seed, input = x or limit_list[0]
-    if not x:
+    groupid, userid, map, seed, input = x or limit_list.pop(0)
+    if x == None and not gennerating:
         gennerating = True
+        logger.debug(f"novelai开始工作")
     bot = get_bot()
-    logger.debug(f"novelai开始生成"+input)
+    logger.debug(f"novelai开始生成"+input+f",剩余{len(limit_list)}人")
     async with aiohttp.ClientSession("https://api.novelai.net/", headers=header) as session:
         async with session.post("/ai/generate-image", json=txt2pix_body(seed, input, map)) as resp:
             if resp.status != 201:
@@ -85,9 +86,10 @@ async def run_txt2pix(x):
                     "group_id": groupid,
                 },
             )
-    if not x:
-        limit_list.pop(0)
+            logger.debug(f"novelai生成完成"+input)
+    if x == None:
         if len(limit_list)>0:
             await run_txt2pix(None)
         else:
             gennerating = False
+            logger.debug(f"novelai开始休息")
