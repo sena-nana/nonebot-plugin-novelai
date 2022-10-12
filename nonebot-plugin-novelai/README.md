@@ -5,15 +5,15 @@ aiohttp,aiofiles
 ## 配置文件
 需要将以下信息写入env文件
 
-1. NOVELAI_TOKEN:str   你的Novelai token，需要f12抓取
+1. NOVELAI_TOKEN="str"   你的Novelai token，需要f12抓取
 
 可选信息
 
-1. NOVELAI_TAG:str   所有生成都会事先加上这些tag，用来塞私货或者精简指令
-2. NOVELAI_CD:int   单个用户的cd，默认为60s
-3. NOVELAI_LIMIT:bool   是否启用并行限制，启用的话，bot会将请求加入队列，在服务器返回之前的结果后再申请。可以防止请求过快，在不知道官方会不会封号的情况下有心理安慰作用。默认开启
-4. NOVELAI_API_DOMAIN:str 白嫖服务器时修改，不设置默认官方服务器
-5. NOVELAI_SITE_DOMAIN:str 白嫖服务器时修改，不设置默认官方服务器
+1. NOVELAI_TAG="str"   所有生成都会事先加上这些tag，用来塞私货或者精简指令
+2. NOVELAI_CD=int   单个用户的cd，默认为60s
+3. NOVELAI_LIMIT=bool   是否启用并行限制，启用的话，bot会将请求加入队列，在服务器返回之前的结果后再申请。可以防止请求过快，在不知道官方会不会封号的情况下有心理安慰作用。默认开启
+4. NOVELAI_API_DOMAIN="str"  白嫖服务器时修改，不设置默认官方服务器
+5. NOVELAI_SITE_DOMAIN="str"  白嫖服务器时修改，不设置默认官方服务器
 
 ## 说明
 该插件爬取novelai以允许在nonebot2前端软件中使用ai绘图
