@@ -9,7 +9,7 @@ class Config(BaseSettings):
     novelai_tag: str = ""
     novelai_cd: int = 60
     novelai_limit: bool = True
-
+    novelai_save_pic:bool = True
     novelai_api_domain: str = "https://api.novelai.net/"
     novelai_site_domain: str = "https://novelai.net/"
 

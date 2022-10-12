@@ -136,7 +136,7 @@ async def _run_txt2pix(map, seed, input):
 
             img = base64.b64decode(img_bytes)
             async with aiofiles.open(
-                str(path / f"{seed} {input[:100]}.png", "wb")
+                str(path / f"{seed} {input[:100]}.png"), "wb"
             ) as f:
                 await f.write(img)
 
