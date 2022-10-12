@@ -1,8 +1,8 @@
 
 from nonebot import get_driver
 from .config import config
-lowQuality = 'lowres, bad anatomy, bad hands, text, error, missing fingers, extra digit, fewer digits, cropped, worst quality, low quality, normal quality, jpeg artifacts, signature, watermark, username, blurry,nsfw,'
-basetag="masterpiece,extremely detailed,best quality,"
+lowQuality = 'lowres, bad anatomy, bad hands, text, error, missing fingers, extra digit, fewer digits, cropped, worst quality, low quality, normal quality, jpeg artifacts, signature, watermark, username, blurry,'
+basetag="{masterpiece},extremely detailed 8k wallpaper,best quality,an extremely delicate and beautiful,"
 token=get_driver().config.novelai_token
 header={
         "authorization":'Bearer '+token,

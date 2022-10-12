@@ -19,13 +19,14 @@ limit_list = []
 
 @txt2pix.handle()
 async def txt2pix_handle(event: GroupMessageEvent, args: Message = CommandArg()):
+    global cd,limit_list,gennerating
     nowtime = time.time()
     if (nowtime-cd.get(event.user_id, 0)) < config.novelai_cd:
         await txt2pix.finish(f"你冲的太快啦，请休息一下吧")
     else:
         cd[event.user_id] = nowtime
     message_raw = args.extract_plain_text().replace("，", ",").split("-")
-    map = [640, 640]
+    map = [768, 512]
     input = ""
     seed_raw = None
     for i in message_raw:
@@ -35,7 +36,7 @@ async def txt2pix_handle(event: GroupMessageEvent, args: Message = CommandArg())
             case "portrait" | "p" | "P":
                 map = [768, 512]
             case 'landscape' | "l" | "L":
-                map = [768, 512]
+                map = [512, 768]
             case _:
                 if i.isdigit():
                     seed_raw = int(i)
@@ -54,6 +55,7 @@ async def txt2pix_handle(event: GroupMessageEvent, args: Message = CommandArg())
 
 
 async def run_txt2pix(x):
+    global cd,limit_list,gennerating
     groupid, userid, map, seed, input = x or limit_list.pop(0)
     if x == None and not gennerating:
         gennerating = True
