@@ -1,5 +1,7 @@
+import base64
 import time
 from pathlib import Path
+import aiofiles
 
 import aiohttp
 from nonebot import get_bot, on_command
@@ -124,5 +126,13 @@ async def _run_txt2pix(map, seed, input):
             img = await resp.text()
 
         img_bytes = img.split("data:")[1]
+
+        if config.novelai_save_pic:
+            if not path.exists():
+                path.mkdir(parents=True)
+
+            img = base64.b64decode(img_bytes)
+            async with aiofiles.open(str(path / f"{seed} {input[:100]}", "wb")) as f:
+                await f.write(img)
 
         return f"Seed: {seed}" + MessageSegment.image(f"base64://{img_bytes}")
