@@ -107,7 +107,10 @@ async def run_txt2pix(x=None):
 
         while len(limit_list) > 0:
             x = limit_list.pop(0)
-            await generate(x)
+            try:
+                await generate(x)
+            except:
+                logger.exception("生成中断")
 
         gennerating = False
         logger.info("队列结束")
@@ -132,7 +135,9 @@ async def _run_txt2pix(map, seed, input):
                 path.mkdir(parents=True)
 
             img = base64.b64decode(img_bytes)
-            async with aiofiles.open(str(path / f"{seed} {input[:100]}.png", "wb")) as f:
+            async with aiofiles.open(
+                str(path / f"{seed} {input[:100]}.png", "wb")
+            ) as f:
                 await f.write(img)
 
         return f"Seed: {seed}" + MessageSegment.image(f"base64://{img_bytes}")
