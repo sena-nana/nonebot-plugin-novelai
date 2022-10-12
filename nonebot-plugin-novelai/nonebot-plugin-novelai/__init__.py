@@ -1,7 +1,8 @@
-from . import txt2pix,config
+from . import txt2pix, config
 from nonebot.plugin import PluginMetadata
-__plugin_meta__= PluginMetadata(
-    name='AI绘图',
-    description='调用novelai进行二次元AI绘图',
-    usage='',
+
+__plugin_meta__ = PluginMetadata(
+    name="AI绘图",
+    description="调用novelai进行二次元AI绘图",
+    usage="",
 )
