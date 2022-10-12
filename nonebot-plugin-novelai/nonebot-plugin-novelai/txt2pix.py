@@ -132,7 +132,7 @@ async def _run_txt2pix(map, seed, input):
                 path.mkdir(parents=True)
 
             img = base64.b64decode(img_bytes)
-            async with aiofiles.open(str(path / f"{seed} {input[:100]}", "wb")) as f:
+            async with aiofiles.open(str(path / f"{seed} {input[:100]}.png", "wb")) as f:
                 await f.write(img)
 
         return f"Seed: {seed}" + MessageSegment.image(f"base64://{img_bytes}")
