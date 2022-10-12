@@ -30,3 +30,4 @@ def txt2pix_body(seed, input, map):
             "uc": lowQuality,
         },
     }
+

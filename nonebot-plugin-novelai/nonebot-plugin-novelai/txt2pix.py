@@ -10,7 +10,8 @@ from nonebot.log import logger
 from nonebot.params import CommandArg
 
 from .config import config
-from .data import *
+from .data import txt2pix_body,header
+from .utils import is_contain_chinese
 
 path = Path("data/novelai/output").resolve()
 txt2pix = on_command(".aidraw", aliases={"文本生图", "咏唱"})
@@ -32,15 +33,18 @@ async def txt2pix_handle(event: GroupMessageEvent, args: Message = CommandArg())
     map = [768, 512]  # h*w
     input = ""
     seed_raw = None
-
+    nopre=False
+    
     for i in message_raw:
         match i:
-            case "square" | "s" | "S":
+            case "square" | "s":
                 map = [640, 640]
-            case "portrait" | "p" | "P":
+            case "portrait" | "p":
                 map = [768, 512]
-            case "landscape" | "l" | "L":
+            case "landscape" | "l":
                 map = [512, 768]
+            case "nopre"|"np":
+                nopre=True
             case _:
                 if i.isdigit():
                     seed_raw = int(i)
@@ -51,23 +55,26 @@ async def txt2pix_handle(event: GroupMessageEvent, args: Message = CommandArg())
         await txt2pix.finish(f"请描述你想要生成的角色特征(使用英文Tag,代码内已包含优化TAG)")
 
     if "nsfw" in input.lower():
-        await txt2pix.finish("你想干嘛？生成NSFW涩图的爬一边去，这可是关乎账号的存亡啊")
-
+        await txt2pix.finish("H是不行的!")
     seed = seed_raw or int(time.time())
-    x = (event.group_id, event.user_id, map, seed, input)
+
+    if is_contain_chinese(input):
+        input=await translate(input)
+        logger.info(f"检测到中文，机翻结果为{input}")
 
     if config.novelai_limit:
+        messagepack = (event.group_id, event.user_id, map, seed, input)
         list_len = get_wait_num()
         await txt2pix.send(
             f"排队中，你的前面还有{list_len}人，请稍安勿躁，坐和放宽～" if list_len > 0 else "请稍等，图片生成中"
         )
-
-        limit_list.append(x)
+        limit_list.append(messagepack)
         await run_txt2pix()
 
     else:
         await txt2pix.send(f"请稍等，图片生成中")
-        await run_txt2pix(x)
+        messagepack = (event.group_id, event.user_id, map, seed, input)
+        await run_txt2pix(messagepack)
 
 
 def get_wait_num():
@@ -76,8 +83,18 @@ def get_wait_num():
         list_len += 1
     return list_len
 
+async def translate(input):
+    async with aiohttp.ClientSession() as session:
+        data = {
+                'doctype': 'json',
+                'type': 'ZH_CN2EN',
+                'i': input
+                }
+        async with session.post("http://fanyi.youdao.com/translate",data=data) as requests:
+            result = await requests.json()
+            return result["translateResult"][0][0]["tgt"]
 
-async def run_txt2pix(x=None):
+async def run_txt2pix(messagepack=None):
     global gennerating
     bot = get_bot()
 
@@ -98,17 +115,17 @@ async def run_txt2pix(x=None):
             group_id=group,
         )
 
-    if x:
-        await generate(x)
+    if messagepack:
+        await generate(messagepack)
 
     if not gennerating:
         logger.info("队列开始")
         gennerating = True
 
         while len(limit_list) > 0:
-            x = limit_list.pop(0)
+            messagepack = limit_list.pop(0)
             try:
-                await generate(x)
+                await generate(messagepack)
             except:
                 logger.exception("生成中断")
 
