@@ -23,8 +23,7 @@ class Config(BaseSettings):
             return field.default
         return v
 
-    @validator("novelai_mode")
-    def non_negative(cls, mode: str, field: ModelField):
+    """def check_mode(cls):
         match mode:
             case "novelai":
                 if cls.novelai_token:
@@ -65,6 +64,7 @@ class Config(BaseSettings):
                 else:
                     logger.error(f"请配置正确的运行模式，自动切换至public_naifu模式，该模式下运行不稳定")
                     return "public_naifu"
+    """
     def set_novelai(cls):
         cls.novelai_api_domain: str = "https://api.novelai.net/"
         cls.novelai_site_domain: str = "https://novelai.net/"
