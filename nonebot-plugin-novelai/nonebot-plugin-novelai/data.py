@@ -1,8 +1,9 @@
 import urllib.parse
 from .config import config
 
-lowQuality = "lowres, bad anatomy, bad hands, text, error, missing fingers, extra digit, fewer digits, cropped, worst quality, low quality, normal quality, jpeg artifacts, signature, watermark, username, blurry, "
-basetag = "{masterpiece}, extremely detailed 8k wallpaper, best quality, an extremely delicate and beautiful, "
+lowQuality = "lowres, bad anatomy, bad hands, text, error, missing fingers, extra digit, fewer digits, cropped, worst quality, low quality, normal quality, jpeg artifacts, signature, watermark, username, blurry,"
+htags=["nsfw","nude"]
+basetag = "{masterpiece}, extremely detailed 8k wallpaper, best quality, an extremely delicate and beautiful,"
 token = config.novelai_token
 header = {
     "authorization": "Bearer " + token,
@@ -13,8 +14,14 @@ header = {
     "user-agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/106.0.0.0 Safari/537.36",
 }
 
-
 def txt2pix_body(seed, input, map):
+    if config.novelai_h:
+        uc=lowQuality
+    else:
+        htagstr=""
+        for i in htags:
+            htagstr=htagstr+i+","
+        uc=lowQuality+htagstr
     return {
         "input": input + basetag + config.novelai_tag,
         "model": "safe-diffusion",
@@ -27,7 +34,6 @@ def txt2pix_body(seed, input, map):
             "seed": seed,
             "n_samples": 1,
             "ucPreset": 0,
-            "uc": lowQuality,
+            "uc": uc,
         },
     }
-

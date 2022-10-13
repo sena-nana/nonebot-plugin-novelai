@@ -133,4 +133,4 @@ test/
 .pdm.toml
 pdm.lock
 pyproject.toml
-test.py
+test.*
