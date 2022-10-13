@@ -1,7 +1,7 @@
 # 基于nonebot2的Novelai绘图插件
 环境需求：
 - Python>=3.10，低版本python请自行clone然后修改match部分代码
-- nonebot2>=rc1，如果不符合版本安装时会强制升上去然后你的其他一大堆插件就会爆炸
+- nonebot2>=b4，如果不符合版本安装时会强制升上去然后你的其他一大堆插件就会爆炸
 ## 依赖
 aiohttp,aiofiles
 ## 配置文件
