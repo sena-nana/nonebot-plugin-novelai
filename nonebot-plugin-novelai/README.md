@@ -33,6 +33,7 @@ aiohttp,aiofiles
 - square为指定画幅，支持简写为s和S，其他画幅为portrait和landscape，同样支持简写，默认为portrait
 - seed若省略则为自动生成
 - 词条使用英文，使用逗号（中英都行，代码里有转换）分割，中文会自动机翻为英文，不支持其他语种
+- 如果你不想用.aidraw，可以用 **文本生图** 或 **咏唱** 代替。
 
 .aidraw on/off
 - 启动/关闭本群的aidraw
