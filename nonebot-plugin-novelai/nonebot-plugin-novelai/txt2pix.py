@@ -8,10 +8,11 @@ from nonebot import get_bot, on_command
 from nonebot.adapters.onebot.v11 import GroupMessageEvent, Message, MessageSegment
 from nonebot.log import logger
 from nonebot.params import CommandArg
+import re
 
 from .config import config
 from .data import txt2pix_body,header,htags
-from .utils import is_contain_chinese,translate_ZH2EN
+from .utils import is_contain_chinese,translate_ZH2EN,file_name_check
 
 path = Path("data/novelai").resolve()
 txt2pix = on_command(".aidraw", aliases={"文本生图", "咏唱"})
@@ -75,6 +76,10 @@ async def txt2pix_handle(event: GroupMessageEvent, args: Message = CommandArg())
             for i in htags:
                 if i in input.lower():
                     await txt2pix.finish("H是不行的!")
+
+        # 处理奇奇怪怪的输入
+        input=re.sub("\W","",input)
+        input=file_name_check(input)
 
         #生成种子
         seed = seed_raw or int(time.time())
