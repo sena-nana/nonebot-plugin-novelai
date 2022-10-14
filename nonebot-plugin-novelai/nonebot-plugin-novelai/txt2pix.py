@@ -78,7 +78,7 @@ async def txt2pix_handle(event: GroupMessageEvent, args: Message = CommandArg())
                     await txt2pix.finish("H是不行的!")
 
         # 处理奇奇怪怪的输入
-        input=re.sub("\W","",input)
+        input=re.sub("\s","",input)
         input=file_name_check(input)
 
         #生成种子
@@ -93,7 +93,7 @@ async def txt2pix_handle(event: GroupMessageEvent, args: Message = CommandArg())
             messagepack = (event.group_id, event.user_id, map, seed, input)
             list_len = get_wait_num()
             await txt2pix.send(
-                f"排队中，你的前面还有{list_len}人，请稍安勿躁，坐和放宽～" if list_len > 0 else "请稍等，图片生成中"
+                f"排队中，你的前面还有{list_len}人" if list_len > 0 else "请稍等，图片生成中"
             )
             limit_list.append(messagepack)
             await run_txt2pix()
@@ -124,7 +124,7 @@ async def run_txt2pix(messagepack=None):
             im = await _run_txt2pix(map, seed, input)
         except:
             logger.exception("请求NovelAI接口失败")
-            im = "请求NovelAI接口失败，请稍后重试"
+            im = "请求NovelAI接口失败，请联系BOT主排查原因"
         else:
             logger.info(f"队列剩余{get_wait_num()}人 | 生成完毕：{y}")
 
@@ -165,14 +165,15 @@ async def _run_txt2pix(map, seed, input):
 
         img_bytes = img.split("data:")[1]
 
-        if config.novelai_save_pic:
-            if not path.exists():
-                path.mkdir(parents=True)
+        await save_pix(seed, input, img_bytes)
+        return f"Seed: {seed}" + MessageSegment.image(f"base64://{img_bytes}")
 
-            img = base64.b64decode(img_bytes)
-            async with aiofiles.open(
+async def save_pix(seed, input, img_bytes):
+    if config.novelai_save_pic:
+        if not path.exists():
+            path.mkdir(parents=True)
+        img = base64.b64decode(img_bytes)
+        async with aiofiles.open(
                 str(path/"output"/f"{seed} {input[:100]}.png"), "wb"
             ) as f:
-                await f.write(img)
-
-        return f"Seed: {seed}" + MessageSegment.image(f"base64://{img_bytes}")
+            await f.write(img)
