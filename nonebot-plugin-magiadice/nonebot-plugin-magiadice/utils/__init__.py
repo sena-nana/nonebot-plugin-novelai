@@ -8,4 +8,4 @@ async def sendtosuperuser(message):
             'message': message,
             'user_id': superuser,
         })
-        asyncio.sleep(5)
+        await asyncio.sleep(5)

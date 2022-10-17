@@ -3,6 +3,7 @@ from nonebot import get_driver
 from nonebot.log import logger
 from pydantic.fields import ModelField
 import asyncio
+from .utils import check_last_version
 
 class Config(BaseSettings):
     novelai_token: str = ""
@@ -16,55 +17,49 @@ class Config(BaseSettings):
     novelai_paid:bool = False
     novelai_ban:list[int]=[]
     novelai_h:bool = False
+    novelai_oncemax:int = 3
 
-    @validator("novelai_cd")
+    @validator("novelai_cd","novelai_oncemax")
     def non_negative(cls, v: int, field: ModelField):
         if v < 1:
             return field.default
         return v
 
-    """def check_mode(cls):
+    def check_mode(cls):
+        mode=cls.novelai_mode
         match mode:
             case "novelai":
                 if cls.novelai_token:
                     cls.set_novelai()
-                    return mode
                 else:
                     logger.error(f"使用novelai模式但未检测到novelai token，已切换至public_naifu模式，该模式下运行不稳定")
                     asyncio.run(cls.setup_naifu())
-                    return "public_naifu"
+                    cls.mode="public_naifu"
             case "public_naifu":
                 asyncio.run(cls.setup_naifu())
                 logger.info(f"正在使用public_naifu模式，该模式下运行不稳定")
-                return mode
             case "public_webui":
                 asyncio.run(cls.setup_webui())
                 logger.info(f"正在使用webui模式，该模式下运行不稳定")
-                return mode
             case "mix":
                 logger.info(f"正在使用mix(public_naifu+public_naifu)模式，该模式下运行不稳定")
-                return mode
             case "naifu":
                 if cls.novelai_api_domain == "https://api.novelai.net/" or cls.novelai_site_domain == "https://novelai.net/":
                     logger.error(f"请配置个人服务器api和site，已切换至public_naifu模式，该模式下运行不稳定")
-                    return "public_naifu"
-                else:
-                    return mode
+                    cls.mode="public_naifu"
             case "webui":
                 if cls.novelai_api_domain == "https://api.novelai.net/" or cls.novelai_site_domain == "https://novelai.net/":
                     logger.error(f"请配置个人服务器api和site，已切换至public_webui模式，该模式下运行不稳定")
-                    return "public_webui"
-                else:
-                    return mode
+                    cls.mode="public_webui"
             case _:
                 if cls.novelai_token:
                     logger.error(f"请配置正确的运行模式，检测到token，自动切换至novelai模式")
                     cls.set_novelai()
-                    return "novelai"
+                    cls.mode="novelai"
                 else:
                     logger.error(f"请配置正确的运行模式，自动切换至public_naifu模式，该模式下运行不稳定")
-                    return "public_naifu"
-    """
+                    cls.mode="public_naifu"
+
     def set_novelai(cls):
         cls.novelai_api_domain: str = "https://api.novelai.net/"
         cls.novelai_site_domain: str = "https://novelai.net/"
@@ -89,7 +84,6 @@ class Config(BaseSettings):
     class Config:
         extra = "ignore"
 
-
-
 config = Config(**get_driver().config.dict())
+config.check_mode()
 logger.debug(f"加载config完成" + str(config))
