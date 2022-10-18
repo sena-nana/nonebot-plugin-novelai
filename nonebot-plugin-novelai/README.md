@@ -1,4 +1,4 @@
-# 基于nonebot2的Novelai绘图插件
+# 支持中文关键词的基于nonebot2的AI绘图插件
 环境需求：
 - Python>=3.10，低版本python请自行clone然后修改match部分代码
 - nonebot2>=b4，如果不符合版本安装时会强制升上去然后你的其他一大堆插件就会爆炸
@@ -18,17 +18,15 @@ aiohttp,aiofiles
 5. NOVELAI_SITE_DOMAIN="str"  白嫖服务器时修改，不设置默认官方服务器(未完成)
 6. NOVELAI_SAVE_PIC=bool  是否自动保存到本地，默认开启
 7. NOVELAI_MODE="str"   设置插件运行模式，默认"novelai"，详细查看说明书（还没写）
-8. NOVELAI_PAID=bool   是否启用已付费模式,默认关闭（当前没有用）
+8. NOVELAI_PAID=int   是否启用已付费模式,默认为0（禁用），1为点数模式，详细查看说明书，2为无限制模式
 9. NOVELAI_BAN=list[int] 设置在哪些群禁用，默认为空，运行时可通过指令修改
 10. NOVELAI_H=bool 是否启用r18模式，默认关闭（开启后被风控或者封号不要发issue）
 10. NOVELAI_ONCEMAX=int 单次允许生成的最大数量
 
 ## 说明
-公开测试群：1014786817
+该插件允许在nonebot2前端软件中使用ai绘图，支持的后端为novalai官方，naifu和webui
 
-该插件爬取novelai以允许在nonebot2前端软件中使用ai绘图
-
-插件需要novelai的token才能运行，所以你需要首先购买novelai的25刀套餐（25刀套餐支持无限生成）。其他套餐也支持，但是会扣费。
+novelai模式需要token才能运行，所以你需要首先购买novelai的25刀套餐（25刀套餐支持无限生成）。其他套餐也支持，但是会扣费。
 ## 指令示例
 
 .aidraw -seed-square-cute,loli,kawaii,
@@ -40,6 +38,15 @@ aiohttp,aiofiles
 
 .aidraw on/off
 - 启动/关闭本群的aidraw
+
+.anlas check
+- 查看自己拥有的点数
+
+.anlas
+- 查看帮助
+
+.anlas [数字] @[某人]
+- 将自己的点数分给别人(superuser点数无限)
 
 ## FEATURE
 - NAIFU
@@ -57,7 +64,6 @@ aiohttp,aiofiles
     - [x] 支持以图生图
     - [ ] 支持衍生
     - [ ] 支持细化
-    - [ ] 付费点数制
 - OTHERS
     - [x] 内置优化词条模板并自动使用
     - [x] 生成图片自动保存至data/novelai文件夹
@@ -67,6 +73,7 @@ aiohttp,aiofiles
     - [x] 支持开关禁止nsfw
     - [x] 支持开启关闭功能
     - [x] 支持机翻词条为英文
+    - [x] 付费点数制
     - [ ] 支持输入排除词条
     - [ ] 支持白嫖别人的自搭服务器
     - [ ] 支持数据统计
@@ -76,3 +83,4 @@ aiohttp,aiofiles
     - [ ] 支持批量生成
     - [ ] 支持多台后端负载均衡
     - [ ] 支持解除分辨率限制
+    - [ ] 内置咒语集

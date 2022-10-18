@@ -3,7 +3,6 @@ from nonebot import get_driver
 from nonebot.log import logger
 from pydantic.fields import ModelField
 import asyncio
-from .utils import check_last_version
 
 class Config(BaseSettings):
     novelai_token: str = ""
@@ -14,7 +13,7 @@ class Config(BaseSettings):
     novelai_api_domain: str = "https://api.novelai.net/"
     novelai_site_domain: str = "https://novelai.net/"
     novelai_mode:str = "novelai"
-    novelai_paid:bool = False
+    novelai_paid:int = 0
     novelai_ban:list[int]=[]
     novelai_h:bool = False
     novelai_oncemax:int = 3
@@ -22,6 +21,13 @@ class Config(BaseSettings):
     @validator("novelai_cd","novelai_oncemax")
     def non_negative(cls, v: int, field: ModelField):
         if v < 1:
+            return field.default
+        return v
+    @validator("novelai_paid")
+    def paid(cls, v: int, field: ModelField):
+        if v < 0:
+            return field.default
+        elif v > 2:
             return field.default
         return v
 

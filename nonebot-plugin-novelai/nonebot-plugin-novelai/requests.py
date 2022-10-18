@@ -1,8 +1,11 @@
+from PIL import Image
+import base64
+from io import BytesIO
+
 import urllib.parse
 from .config import config
-
 lowQuality = "lowres, bad anatomy, bad hands, text, error, missing fingers, extra digit, fewer digits, cropped, worst quality, low quality, normal quality, jpeg artifacts, signature, watermark, username, blurry,"
-htags=["nsfw","nude"]
+htags = ["nsfw", "nude"]
 basetag = "{masterpiece}, extremely detailed 8k wallpaper, best quality, an extremely delicate and beautiful,"
 token = config.novelai_token
 header = {
@@ -14,23 +17,24 @@ header = {
     "user-agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/106.0.0.0 Safari/537.36",
 }
 
-def txt2img_body(seed, input, map):
+
+def txt2img_body(seed, input, width,height):
     if config.novelai_h:
-        uc=lowQuality
+        uc = lowQuality
     else:
-        htagstr=""
+        htagstr = ""
         for i in htags:
-            htagstr=htagstr+i+","
-        uc=lowQuality+htagstr
+            htagstr = htagstr+i+","
+        uc = lowQuality+htagstr
     return {
         "input": input + basetag + config.novelai_tag,
         "model": "safe-diffusion",
         "parameters": {
-            "width": map[1],
-            "height": map[0],
+            "width": width,
+            "height": height,
             "scale": 11,
             "sampler": "k_euler_ancestral",
-            "qualityToggle":True,
+            "qualityToggle": True,
             "steps": 28,
             "seed": seed,
             "n_samples": 1,
@@ -38,39 +42,26 @@ def txt2img_body(seed, input, map):
             "uc": uc,
         },
     }
-from PIL import Image
-from io import BytesIO
-import base64
-from nonebot.log import logger
-def img2img_body(seed, input,img_b64):
-    tmpfile=BytesIO(img_b64)
-    image = Image.open(tmpfile)
-    width,height=image.size
-    if width>=height:
-        width=round(width/height*8)*64
-        height=512
-    else:
-        height=round(height/width*8)*64
-        width=512
+
+
+def img2img_body(seed, input, width,height, image):
     if config.novelai_h:
-        uc=lowQuality
+        uc = lowQuality
     else:
-        htagstr=""
+        htagstr = ""
         for i in htags:
-            htagstr=htagstr+i+","
-        uc=lowQuality+htagstr
-    image=str(base64.b64encode(img_b64),"utf-8")
-    logger.debug(image)
+            htagstr = htagstr+i+","
+        uc = lowQuality+htagstr
     return {
         "input": input + basetag + config.novelai_tag,
         "model": "safe-diffusion",
         "parameters": {
             "width": width,
             "image": image,
-            "noise":0.2,
-            "strength":0.7,
+            "noise": 0.2,
+            "strength": 0.7,
             "height": height,
-            "qualityToggle":True,
+            "qualityToggle": True,
             "scale": 11,
             "sampler": "k_euler_ancestral",
             "steps": 50,
@@ -80,16 +71,3 @@ def img2img_body(seed, input,img_b64):
             "uc": uc,
         },
     }
-
-def check_anias(width,height,img_b64,strength=0.7,count=1):
-    #计算需要消耗的点数
-    tmpfile=BytesIO(img_b64)
-    image = Image.open(tmpfile)
-    width,height=image.size
-    if width>=height:
-        width=round(width/height*8)*64
-        height=512
-    else:
-        height=round(height/width*8)*64
-        width=512
-    return round(width*height*strength*count/45875)
