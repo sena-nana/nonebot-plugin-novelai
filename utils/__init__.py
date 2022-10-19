@@ -38,3 +38,40 @@ def file_name_check(input:str):
     for i in errorcode:
         input.replace(i,"")
     return input
+async def translate_bing(text:str,to:"str")->str:
+    """
+    en,jp,zh_Hans
+    """
+    import aiohttp
+    header={
+            "Ocp-Apim-Subscription-Key": "a73f60c75b2543da887c7098744a1348",
+            "Content-Type": "application/json",
+        }
+    async with aiohttp.ClientSession() as session:
+        body=[{'text': text}]
+        params={
+            "api-version":"3.0",
+            "to":to,
+        }
+        async with session.post('https://api.cognitive.microsofttranslator.com/translate',json=body,params=params,headers=header) as resp:
+            if resp.status!=200:
+                return f"识别失败，错误代码为{resp.status}"
+            jsonresult=await resp.json()
+            return jsonresult[0]["translations"][0]["text"]
+async def check_lan(text:str):
+    key = "a73f60c75b2543da887c7098744a1348"
+    header = {
+        "Ocp-Apim-Subscription-Key": key,
+        "Content-Type": "application/json",
+    }
+    async with aiohttp.ClientSession() as session:
+        body = [{'text': text}]
+        params = {
+            "api-version": "3.0"
+        }
+        async with session.post('https://api.cognitive.microsofttranslator.com/detect', json=body, params=params, headers=header) as resp:
+            if resp.status != 200:
+                logger.error(f"Bing翻译接口调用失败,错误代码{resp.status},{await resp.text()}")
+                return None
+            jsonresult = await resp.json()
+            return jsonresult[0]["language"]

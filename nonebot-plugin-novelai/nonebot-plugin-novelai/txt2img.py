@@ -12,12 +12,13 @@ import re
 import hashlib
 from .config import config
 from .requests import txt2img_body, header, htags, img2img_body
-from .utils import is_contain_chinese, translate_ZH2EN, file_name_check
+from .utils import is_contain_chinese,file_name_check
+from .others.translation import translate
 from .version import check_update
 from .others.anlas import anlas_check, anlas_set, superusers
 from .fifo import IMG2IMG, FIFO_IMG, TXT2IMG, FIFO_TXT
 path = Path("data/novelai").resolve()
-txt2img = on_command(".aidraw", aliases={"文本生图", "咏唱"})
+txt2img = on_command(".aidraw", aliases={"绘画", "咏唱","约稿","召唤"})
 
 cd = {}
 gennerating = False
@@ -107,7 +108,11 @@ async def txt2img_handle(event: GroupMessageEvent, args: Message = CommandArg())
 
         # 检测中文
         if is_contain_chinese(tags):
-            tags = await translate_ZH2EN(tags)
+            tags_en = await translate(tags,"en")
+            if tags_en==tags:
+                txt2img.finish(f"检测到中文，翻译失败，生成终止，请联系BOT主查看后台")
+            else:
+                tags=tags_en
             logger.info(f"检测到中文，机翻结果为{tags}")
         if imgbytes:
             data_img = []

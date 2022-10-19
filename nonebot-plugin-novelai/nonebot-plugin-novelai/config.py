@@ -17,6 +17,7 @@ class Config(BaseSettings):
     novelai_ban:list[int]=[]
     novelai_h:bool = False
     novelai_oncemax:int = 3
+    bing_key:str=None
 
     @validator("novelai_cd","novelai_oncemax")
     def non_negative(cls, v: int, field: ModelField):
