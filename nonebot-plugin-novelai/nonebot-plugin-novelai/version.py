@@ -9,7 +9,7 @@ url="https://github.com/Mutsukibot/tree/nonebot-plugin-novelai"
 try:
     __version__=version(package)
 except:
-    __version__="0.4.1"
+    __version__="0.4.3"
 
 lastcheck:float=0
 async def check_update(isinit=True):
