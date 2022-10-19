@@ -3,6 +3,7 @@ from io import BytesIO
 from PIL import Image
 import base64
 from .config import config
+from nonebot import get_driver
 
 
 @dataclass()
@@ -53,6 +54,9 @@ class FIFO_IMG(FIFO_TXT):
                 width = i.width
                 height = i.height
                 anlas += round(width*height*self.strength*self.count/45875)
-            self.cost = anlas
+            if self.user_id in get_driver().config.superusers:
+                self.cost = 0
+            else:
+                self.cost = anlas
         else:
             self.cost = 0

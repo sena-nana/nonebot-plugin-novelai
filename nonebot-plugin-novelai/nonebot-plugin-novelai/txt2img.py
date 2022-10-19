@@ -13,9 +13,9 @@ import hashlib
 from .config import config
 from .requests import txt2img_body, header, htags, img2img_body
 from .utils import is_contain_chinese,file_name_check
-from .others.translation import translate
+from .utils.translation import translate
 from .version import check_update
-from .others.anlas import anlas_check, anlas_set, superusers
+from .utils.anlas import anlas_check, anlas_set, superusers
 from .fifo import IMG2IMG, FIFO_IMG, TXT2IMG, FIFO_TXT
 path = Path("data/novelai").resolve()
 txt2img = on_command(".aidraw", aliases={"绘画", "咏唱","约稿","召唤"})

@@ -1,7 +1,7 @@
 from . import txt2img,config
 from nonebot.plugin import PluginMetadata
 from .version import __version__,url
-from .others.deepdanbooru import deepdanbooru
+from .utils.deepdanbooru import deepdanbooru
 __plugin_meta__ = PluginMetadata(
     name="AI绘图",
     description="调用novelai进行二次元AI绘图",
