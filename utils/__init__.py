@@ -44,7 +44,7 @@ async def translate_bing(text:str,to:"str")->str:
     """
     import aiohttp
     header={
-            "Ocp-Apim-Subscription-Key": "a73f60c75b2543da887c7098744a1348",
+            "Ocp-Apim-Subscription-Key": key,
             "Content-Type": "application/json",
         }
     async with aiohttp.ClientSession() as session:
@@ -59,7 +59,6 @@ async def translate_bing(text:str,to:"str")->str:
             jsonresult=await resp.json()
             return jsonresult[0]["translations"][0]["text"]
 async def check_lan(text:str):
-    key = "a73f60c75b2543da887c7098744a1348"
     header = {
         "Ocp-Apim-Subscription-Key": key,
         "Content-Type": "application/json",

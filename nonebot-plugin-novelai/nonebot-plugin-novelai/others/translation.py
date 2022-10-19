@@ -16,7 +16,7 @@ async def translate_bing(text: str, to: str) -> str | None:
     """
     en,jp,zh_Hans
     """
-    key = config.bing_key or "a73f60c75b2543da887c7098744a1348"
+    key = config.bing_key
     header = {
         "Ocp-Apim-Subscription-Key": key,
         "Content-Type": "application/json",
