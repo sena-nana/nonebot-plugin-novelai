@@ -75,19 +75,19 @@ class Config(BaseSettings):
     def get_api():
         pass
 
-    def set_enable(cls,enable,groupid):
+    def set_enable(cls,groupid,enable):
         if groupid in cls.novelai_ban:
             if enable:
-                return f"aidraw已经处于启动状态"
-            else:
-                cls.novelai_ban.pop(groupid)
-                return f"aidraw已关闭"
-        else:
-            if enable:
-                cls.novelai_ban.append(groupid)
+                cls.novelai_ban.remove(groupid)
                 return f"aidraw开始运行"
             else:
                 return f"aidraw已经处于关闭状态"
+        else:
+            if enable:
+                return f"aidraw已经处于启动状态"
+            else:
+                cls.novelai_ban.append(groupid)
+                return f"aidraw已关闭"
     class Config:
         extra = "ignore"
 
