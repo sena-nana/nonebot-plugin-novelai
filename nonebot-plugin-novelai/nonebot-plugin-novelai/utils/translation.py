@@ -28,6 +28,7 @@ async def translate_bing(text: str, to: str) -> str | None:
         params = {
             "api-version": "3.0",
             "to": to,
+            "profanityAction":"Deleted",
         }
         async with session.post('https://api.cognitive.microsofttranslator.com/translate', json=body, params=params, headers=header) as resp:
             if resp.status != 200:

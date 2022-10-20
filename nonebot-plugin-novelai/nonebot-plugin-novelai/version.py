@@ -1,27 +1,44 @@
 from importlib.metadata import version
 import asyncio
-from .utils import check_last_version,sendtosuperuser
+from .utils import check_last_version, sendtosuperuser
 from nonebot.log import logger
 import time
 
-package="nonebot-plugin-novelai"
-url="https://github.com/Mutsukibot/tree/nonebot-plugin-novelai"
-try:
-    __version__=version(package)
-except:
-    __version__="0.4.3"
+class Version():
+    version:str
+    lastcheck: float = 0
+    ispushed:bool =True
+    latest:str
+    package="nonebot-plugin-novelai"
+    url="https://sena-nana.github.io/MutsukiDocs/update/novelai/"
 
-lastcheck:float=0
-async def check_update(isinit=True):
-    global lastcheck
-    if time.time()-lastcheck>80000:
-        update=await check_last_version(package,__version__)
-        if update:
-            message=f"检测到新版本{update},当前版本{__version__},请使用pip install --upgrade {package}命令升级,查看项目获取更多信息:{url}"
-            logger.info(message)
-            if isinit:
-                await sendtosuperuser("novelai插件"+message)
-        else:
-            logger.info(f"检查版本完成，当前为最新版本")
-        lastcheck=time.time()
-asyncio.run(check_update(False))
+    def __init__(self):
+        try:
+            self.version = version(self.package)
+        except:
+            self.version = "0.4.4"
+        asyncio.run(self.check_update())
+
+    async def check_update(self):
+        if time.time()-self.lastcheck > 80000:
+            update = await check_last_version(self.package,self.version)
+            if update:
+                self.latest=update
+                logger.info(self.push_txt())
+                self.ispushed=False
+            else:
+                self.latest=self.version
+                logger.info(f"novelai插件检查版本完成，当前为最新版本")
+            self.lastcheck = time.time()
+        try:
+            if not self.ispushed:
+                await sendtosuperuser(self.push_txt())
+                self.ispushed=True
+        except:
+            pass
+
+    def push_txt(self):
+        logger.debug(self.__dict__)
+        return f"novelai插件检测到新版本{self.latest},当前版本{self.version},请使用pip install --upgrade {self.package}命令升级,更新日志：{self.url}"
+
+version=Version()

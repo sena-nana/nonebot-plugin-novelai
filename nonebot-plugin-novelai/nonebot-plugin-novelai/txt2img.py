@@ -14,11 +14,11 @@ from .config import config
 from .requests import txt2img_body, header, htags, img2img_body
 from .utils import is_contain_chinese, file_name_check
 from .utils.translation import translate
-from .version import check_update
+from .version import version
 from .utils.anlas import anlas_check, anlas_set, superusers
 from .fifo import IMG2IMG, FIFO_IMG, TXT2IMG, FIFO_TXT
 from nonebot.adapters.onebot.v11 import GROUP_ADMIN, GROUP_OWNER
-path = Path("data/novelai").resolve()
+path = Path("data/novelai/output").resolve()
 txt2img = on_command(".aidraw", aliases={"绘画", "咏唱", "约稿", "召唤"})
 
 cd = {}
@@ -48,9 +48,9 @@ async def txt2img_handle(bot: Bot, event: GroupMessageEvent, args: Message = Com
     if len(imgbytes) > config.novelai_oncemax:
         await txt2img.finish(f"最大只能同时生成{config.novelai_oncemax}张")
     logger.debug(message_raw)
-    if await GROUP_ADMIN(bot, event) or await GROUP_OWNER(bot, event):
-        for i in message_raw:
+    for i in message_raw:
             i = i.strip()
+            
             match i:
                 case "off":
                     result = config.set_enable(event.group_id, False)
@@ -60,13 +60,14 @@ async def txt2img_handle(bot: Bot, event: GroupMessageEvent, args: Message = Com
                     result = config.set_enable(event.group_id, True)
                     logger.info(result)
                     await txt2img.finish(result)
+                if await GROUP_ADMIN(bot, event) or await GROUP_OWNER(bot, event):
     # 判断是否禁用，若没禁用，进入处理流程
     if event.group_id not in config.novelai_ban:
         # 判断cd
         nowtime = time.time()
         deltatime = nowtime - cd.get(user_id, 0)
         if (deltatime) < config.novelai_cd:
-            await txt2img.finish(f"你冲的太快啦，请休息一下吧，剩余CD为{deltatime}s")
+            await txt2img.finish(f"你冲的太快啦，请休息一下吧，剩余CD为{config.novelai_cd-int(deltatime)}s")
         else:
             cd[user_id] = nowtime
 
@@ -97,7 +98,7 @@ async def txt2img_handle(bot: Bot, event: GroupMessageEvent, args: Message = Com
             await txt2img.finish(f"请描述你想要生成的角色特征(使用英文Tag,代码内已包含优化TAG)")
 
         # 检测是否有18+词条
-        if config.novelai_h:
+        if not config.novelai_h:
             for i in htags:
                 if i in tags.lower():
                     await txt2img.finish("H是不行的!")
@@ -202,7 +203,7 @@ async def run_txt2img(fifo=None):
 
         gennerating = False
         logger.info("队列结束")
-        await check_update()
+        await version.check_update()
 
 
 async def _run_txt2img(fifo: FIFO_TXT):
@@ -253,11 +254,11 @@ async def save_img(seed, tags, img_bytes):
         hash = hashlib.md5(img).hexdigest()
         if len(tags) > 100:
             async with aiofiles.open(
-                str(path/"output"/f"{seed}_{hash}_{tags[:100]}.png"), "wb"
+                str(path/f"{seed}_{hash}_{tags[:100]}.png"), "wb"
             ) as f:
                 await f.write(img)
         else:
             async with aiofiles.open(
-                str(path/"output"/f"{seed}_{hash}_{tags}.png"), "wb"
+                str(path/f"{seed}_{hash}_{tags}.png"), "wb"
             ) as f:
                 await f.write(img)

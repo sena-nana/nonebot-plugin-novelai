@@ -1,5 +1,6 @@
 # 支持中文关键词的基于nonebot2的AI绘图插件
 插件讨论反馈群：687904502
+说明书：https://sena-nana.github.io/MutsukiDocs/
 
 环境需求：
 - Python>=3.10，低版本python请自行clone然后修改match部分代码
@@ -86,7 +87,6 @@ novelai模式需要token才能运行，所以你需要首先购买novelai的25�
     - [ ] 支持数据统计
     - [ ] 支持私聊
     - [x] 更新提醒
-    - [ ] 自动更新（激进模式）
     - [ ] 支持批量生成
     - [ ] 支持多台后端负载均衡
     - [ ] 支持解除分辨率限制

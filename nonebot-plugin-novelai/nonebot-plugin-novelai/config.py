@@ -91,6 +91,8 @@ class Config(BaseSettings):
     class Config:
         extra = "ignore"
 
+
+
 config = Config(**get_driver().config.dict())
-config.check_mode()
+# config.check_mode()
 logger.debug(f"加载config完成" + str(config))
