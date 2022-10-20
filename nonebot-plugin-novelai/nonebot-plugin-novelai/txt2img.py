@@ -50,17 +50,19 @@ async def txt2img_handle(bot: Bot, event: GroupMessageEvent, args: Message = Com
     logger.debug(message_raw)
     for i in message_raw:
             i = i.strip()
-            
+            managetag=0
             match i:
                 case "off":
-                    result = config.set_enable(event.group_id, False)
-                    logger.info(result)
-                    await txt2img.finish(result)
+                    managetag=1
                 case "on":
-                    result = config.set_enable(event.group_id, True)
+                    managetag=2
+            if managetag:
+                if await GROUP_ADMIN(bot, event) or await GROUP_OWNER(bot, event):
+                    result = config.set_enable(event.group_id,managetag-1)
                     logger.info(result)
                     await txt2img.finish(result)
-                if await GROUP_ADMIN(bot, event) or await GROUP_OWNER(bot, event):
+                else:
+                    await txt2img.finish(f"只有管理员可以使用管理功能")
     # 判断是否禁用，若没禁用，进入处理流程
     if event.group_id not in config.novelai_ban:
         # 判断cd
