@@ -16,7 +16,7 @@ class Version():
         try:
             self.version = version(self.package)
         except:
-            self.version = "0.4.4"
+            self.version = "0.4.5"
         asyncio.run(self.check_update())
 
     async def check_update(self):
