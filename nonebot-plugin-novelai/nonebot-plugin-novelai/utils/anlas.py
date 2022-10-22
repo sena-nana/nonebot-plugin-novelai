@@ -80,3 +80,4 @@ async def anlas_set(user_id, change):
         jsonnew = json.dumps(anlasdict)
         await f.write(jsonnew)
         return True, newanlas
+

@@ -1,11 +1,7 @@
-from PIL import Image
-import base64
-from io import BytesIO
-
 import urllib.parse
 from .config import config
 lowQuality = "lowres, bad anatomy, bad hands, text, error, missing fingers, extra digit, fewer digits, cropped, worst quality, low quality, normal quality, jpeg artifacts, signature, watermark, username, blurry,"
-htags = ["nsfw", "nude"]
+htags = ["nsfw", "nude","裸"]
 basetag = "{masterpiece}, extremely detailed 8k wallpaper, best quality, an extremely delicate and beautiful,"
 token = config.novelai_token
 header = {
@@ -18,7 +14,7 @@ header = {
 }
 
 
-def txt2img_body(seed, input, width,height):
+def txt2img_body(seed, input, width, height):
     if config.novelai_h:
         uc = lowQuality
     else:
@@ -27,7 +23,7 @@ def txt2img_body(seed, input, width,height):
             htagstr = htagstr+i+","
         uc = lowQuality+htagstr
     return {
-        "input": input + basetag + config.novelai_tag,
+        "input": basetag + config.novelai_tag + "," + input,
         "model": "safe-diffusion",
         "parameters": {
             "width": width,
@@ -44,7 +40,7 @@ def txt2img_body(seed, input, width,height):
     }
 
 
-def img2img_body(seed, input, width,height, image):
+def img2img_body(seed, input, width, height, image):
     if config.novelai_h:
         uc = lowQuality
     else:
@@ -53,7 +49,7 @@ def img2img_body(seed, input, width,height, image):
             htagstr = htagstr+i+","
         uc = lowQuality+htagstr
     return {
-        "input": input + basetag + config.novelai_tag,
+        "input": basetag + config.novelai_tag + "," + input,
         "model": "safe-diffusion",
         "parameters": {
             "width": width,

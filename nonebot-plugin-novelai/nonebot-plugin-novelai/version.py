@@ -1,9 +1,7 @@
 from importlib.metadata import version
-import asyncio
 from .utils import check_last_version, sendtosuperuser
 from nonebot.log import logger
 import time
-
 class Version():
     version:str
     lastcheck: float = 0
@@ -16,8 +14,7 @@ class Version():
         try:
             self.version = version(self.package)
         except:
-            self.version = "0.4.5"
-        asyncio.run(self.check_update())
+            self.version = "0.4.6"
 
     async def check_update(self):
         if time.time()-self.lastcheck > 80000:
@@ -30,12 +27,9 @@ class Version():
                 self.latest=self.version
                 logger.info(f"novelai插件检查版本完成，当前为最新版本")
             self.lastcheck = time.time()
-        try:
-            if not self.ispushed:
-                await sendtosuperuser(self.push_txt())
-                self.ispushed=True
-        except:
-            pass
+        if not self.ispushed:
+            await sendtosuperuser(self.push_txt())
+            self.ispushed=True
 
     def push_txt(self):
         logger.debug(self.__dict__)
