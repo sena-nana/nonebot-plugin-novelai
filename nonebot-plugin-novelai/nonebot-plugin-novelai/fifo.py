@@ -12,7 +12,7 @@ class IMG():
     image: str=None
 
     def __post_init__(self):
-        if self.image:
+        if self.image is not None:
             tmpfile = BytesIO(self.image)
             image = Image.open(tmpfile)
             width, height = image.size
@@ -38,7 +38,8 @@ class FIFO():
         if config.novelai_paid == 1:
             anlas=0
             for i in self.data:
-                anlas += round(i.width*i.height*self.strength*self.count/45875)
+                if i.width*i.height > 409600 or i.image is not None or self.count>1:
+                    anlas += round(i.width*i.height*self.strength*self.count/45875)
             if self.user_id in get_driver().config.superusers:
                 self.cost = 0
             else:

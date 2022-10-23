@@ -14,7 +14,7 @@ class Version():
         try:
             self.version = version(self.package)
         except:
-            self.version = "0.4.6"
+            self.version = "0.4.7"
 
     async def check_update(self):
         if time.time()-self.lastcheck > 80000:

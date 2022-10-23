@@ -11,7 +11,7 @@ from nonebot.params import CommandArg
 import re
 import hashlib
 from .config import config
-from .requests import txt2img_body, header, htags, img2img_body
+from .requests import body, header, htags
 from .utils import is_contain_chinese, file_name_check
 from .utils.translation import translate
 from .version import version
@@ -24,9 +24,9 @@ txt2img = on_command(".aidraw", aliases={"绘画", "咏唱", "约稿", "召唤"}
 cd = {}
 gennerating = False
 limit_list = []
-nickname=""
+nickname = ""
 for i in get_driver().config.nickname:
-    nickname=i
+    nickname = i
 
 
 @txt2img.handle()
@@ -51,36 +51,36 @@ async def txt2img_handle(bot: Bot, event: GroupMessageEvent, args: Message = Com
     if len(imgbytes)*count > config.novelai_oncemax:
         await txt2img.finish(f"最大只能同时生成{config.novelai_oncemax}张")
     logger.debug(message_raw)
-    
+
     managetag = 0
-    managelist=message_raw[0].split()
+    managelist = message_raw[0].split()
     match managelist:
         case ["off"]:
-                managetag = 1
+            managetag = 1
         case ["on"]:
-                managetag = 2
+            managetag = 2
         case ["set"]:
-                group_config=await config.get_groupconfig(event.group_id)
-                message="当前群的设置为\n"
-                for i,v in group_config.items():
-                    message+=f"{i}:{v}\n"
-                await txt2img.finish(message)
-        case ["set",arg,value]:
-                if await GROUP_ADMIN(bot, event) or await GROUP_OWNER(bot, event):
-                    await txt2img.finish(f"设置群聊{arg}为{value}完成" if await config.set_value(event.group_id,arg,value) else f"不正确的赋值")
+            group_config = await config.get_groupconfig(event.group_id)
+            message = "当前群的设置为\n"
+            for i, v in group_config.items():
+                message += f"{i}:{v}\n"
+            await txt2img.finish(message)
+        case ["set", arg, value]:
+            if await GROUP_ADMIN(bot, event) or await GROUP_OWNER(bot, event):
+                await txt2img.finish(f"设置群聊{arg}为{value}完成" if await config.set_value(event.group_id, arg, value) else f"不正确的赋值")
     if managetag:
         if await GROUP_ADMIN(bot, event) or await GROUP_OWNER(bot, event):
-                result = config.set_enable(event.group_id, managetag-1)
-                logger.info(result)
-                await txt2img.finish(result)
+            result = config.set_enable(event.group_id, managetag-1)
+            logger.info(result)
+            await txt2img.finish(result)
         else:
-                await txt2img.finish(f"只有管理员可以使用管理功能")
+            await txt2img.finish(f"只有管理员可以使用管理功能")
     # 判断是否禁用，若没禁用，进入处理流程
     if event.group_id not in config.novelai_ban:
         # 判断cd
         nowtime = time.time()
         deltatime = nowtime - cd.get(user_id, 0)
-        cd_=int(await config.get_value(event.group_id,"cd")) or config.novelai_cd
+        cd_ = int(await config.get_value(event.group_id, "cd"))
         if (deltatime) < cd_:
             await txt2img.finish(f"你冲的太快啦，请休息一下吧，剩余CD为{cd_-int(deltatime)}s")
         else:
@@ -112,12 +112,6 @@ async def txt2img_handle(bot: Bot, event: GroupMessageEvent, args: Message = Com
         if not tags:
             await txt2img.finish(f"请描述你想要生成的角色特征(使用英文Tag,代码内已包含优化TAG)")
 
-        # 检测是否有18+词条
-        if not config.novelai_h:
-            for i in htags:
-                if i in tags.lower():
-                    await txt2img.finish("H是不行的!")
-
         # 处理奇奇怪怪的输入
         tags = re.sub("\s", "", tags)
         tags = file_name_check(tags)
@@ -126,13 +120,29 @@ async def txt2img_handle(bot: Bot, event: GroupMessageEvent, args: Message = Com
         seed = seed_raw or int(time.time())
 
         # 检测中文
-        if is_contain_chinese(tags):
-            tags_en = await translate(tags, "en")
-            if tags_en == tags:
+        taglist = tags.split(",")
+        tagzh = ""
+        tags_ = ""
+        for i in taglist:
+            if is_contain_chinese(tags):
+                tagzh += f"{i},"
+            else:
+                tags_ += f"{i},"
+        if tagzh:
+            tags_en = await translate(tagzh, "en")
+            if tags_en == tagzh:
                 txt2img.finish(f"检测到中文，翻译失败，生成终止，请联系BOT主查看后台")
             else:
-                tags = tags_en
-            logger.info(f"检测到中文，机翻结果为{tags}")
+                tags_ += tags_en
+        logger.info(f"获取到词条{tags_}")
+        tags=tags_
+
+        # 检测是否有18+词条
+        if not config.novelai_h:
+            for i in htags:
+                if i in tags.lower():
+                    await txt2img.finish("H是不行的!")
+
         if imgbytes:
             data_img = []
             for i in imgbytes:
@@ -144,7 +154,7 @@ async def txt2img_handle(bot: Bot, event: GroupMessageEvent, args: Message = Com
         if fifo.cost > 0:
             anlascost = fifo.cost
             hasanlas = await anlas_check(fifo.user_id)
-            if hasanlas > anlascost:
+            if hasanlas >= anlascost:
                 await wait_fifo(fifo, anlascost, hasanlas-anlascost)
             else:
                 await txt2img.finish(f"你的点数不足，你的剩余点数为{hasanlas}")
@@ -162,10 +172,10 @@ async def wait_fifo(fifo, anlascost=None, anlas=None):
     if config.novelai_limit:
         await txt2img.send(has_wait if list_len > 0 else no_wait)
         limit_list.append(fifo)
-        await run_txt2img()
+        await fifo_gennerate()
     else:
         await txt2img.send(no_wait)
-        await run_txt2img(fifo)
+        await fifo_gennerate(fifo)
 
 
 def get_wait_num():
@@ -175,16 +185,16 @@ def get_wait_num():
     return list_len
 
 
-async def run_txt2img(fifo:FIFO=None):
+async def fifo_gennerate(fifo: FIFO = None):
     global gennerating
     bot = get_bot()
 
-    async def generate(fifo:FIFO):
+    async def generate(fifo: FIFO):
 
         logger.info(
-            f"队列剩余{get_wait_num()}人 | 开始生成：{fifo.group_id},{fifo.user_id},{fifo.tags}")
+            f"队列剩余{get_wait_num()}人 | 开始生成：{fifo}")
         try:
-            im = await _run_img2img(fifo)
+            im = await _run_gennerate(fifo)
         except:
             logger.exception("生成失败")
             im = "生成失败，请联系BOT主排查原因"
@@ -214,61 +224,53 @@ async def run_txt2img(fifo:FIFO=None):
         logger.info("队列结束")
         await version.check_update()
 
-async def _run_img2img(fifo: FIFO):
+
+async def _run_gennerate(fifo: FIFO):
     img_bytes = []
-    async with aiohttp.ClientSession(
-        config.novelai_api_domain, headers=header
-    ) as session:
+    async with aiohttp.ClientSession(headers=header) as session:
         for i in fifo.data:
-            if i.image:
-                async with session.post(
-                    "/ai/generate-image", json=img2img_body(fifo.seed, fifo.tags, i.width, i.height, i.image)
-                ) as resp:
-                    if resp.status != 201:
-                        return f"生成失败，错误代码为{resp.status}"
-                    img = await resp.text()
-            else:
-                async with session.post(
-                    "/ai/generate-image", json=txt2img_body(fifo.seed, fifo.tags, i.width, i.height)
-                ) as resp:
-                    if resp.status != 201:
-                        return f"生成失败，错误代码为{resp.status}"
-                    img = await resp.text()
-            img_bytes.append(img.split("data:")[1])
-    message=f"Seed: {fifo.seed}"
+            async with session.post(
+                config.novelai_api_domain+"ai/generate-image", json=await body(fifo.seed, fifo.tags, i.width, i.height, fifo.group_id, i.image)
+            ) as resp:
+                if resp.status != 201:
+                    return f"生成失败，错误代码为{resp.status}"
+                img = await resp.text()
+                img_bytes.append(img.split("data:")[1])
+    message = f"Seed: {fifo.seed}"
     if config.novelai_h:
         for i in img_bytes:
             await save_img(fifo.seed, fifo.tags, i)
-            message+=MessageSegment.image(f"base64://{i}")
+            message += MessageSegment.image(f"base64://{i}")
         if fifo.cost > 0:
             await anlas_set(fifo.user_id, -fifo.cost)
         return message
     else:
-        nsfw_count=0
+        nsfw_count = 0
         for i in img_bytes:
             try:
                 label = await check_safe(i)
             except RuntimeError:
                 logger.error(f"NSFWAPI调用失败，错误代码为{RuntimeError.args}")
-                message+=f"{nickname}无法判断图片是否合规(API调用失败)\n"
-                label="unknown"
+                message += f"{nickname}无法判断图片是否合规(API调用失败)\n"
+                label = "unknown"
                 for j in img_bytes:
                     await save_img(fifo.seed, fifo.tags, j)
-                    message+=MessageSegment.image(f"base64://{j}")
+                    message += MessageSegment.image(f"base64://{j}")
                 if fifo.cost > 0:
                     await anlas_set(fifo.user_id, -fifo.cost)
                 return message
             if label == "safe" or "questionable":
-                message+=MessageSegment.image(f"base64://{i}")
+                message += MessageSegment.image(f"base64://{i}")
             else:
-                nsfw_count+=1
-            await save_img(fifo.seed, fifo.tags, i,label)
-        message+=f"\n有{nsfw_count}张图片太涩了，{nickname}已经帮你吃掉了哦" if nsfw_count>0 else f"\n"
+                nsfw_count += 1
+            await save_img(fifo.seed, fifo.tags, i, label)
+        message += f"\n有{nsfw_count}张图片太涩了，{nickname}已经帮你吃掉了哦" if nsfw_count > 0 else f"\n"
         if fifo.cost > 0:
             await anlas_set(fifo.user_id, -fifo.cost)
         return message
 
-async def save_img(seed, tags, img_bytes, extra: str ="unknown"):
+
+async def save_img(seed, tags, img_bytes, extra: str = "unknown"):
     if config.novelai_save_pic:
         path_ = path/extra
         path_.mkdir(parents=True, exist_ok=True)

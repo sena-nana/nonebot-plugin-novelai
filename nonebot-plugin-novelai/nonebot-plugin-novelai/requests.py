@@ -1,8 +1,8 @@
 import urllib.parse
 from .config import config
-lowQuality = "lowres, bad anatomy, bad hands, text, error, missing fingers, extra digit, fewer digits, cropped, worst quality, low quality, normal quality, jpeg artifacts, signature, watermark, username, blurry,"
-htags = ["nsfw", "nude","裸"]
-basetag = "{masterpiece}, extremely detailed 8k wallpaper, best quality, an extremely delicate and beautiful,"
+lowQuality = "lowres, bad anatomy, bad hands, text, error, missing fingers, extra digit, fewer digits, cropped, worst quality, low quality, normal quality, jpeg artifacts, signature, watermark, username, blurry, pubic hair,long neck,blurry"
+htags = ["nsfw", "nude","naked","nipple","blood","censored","vagina","gag","gokkun","hairjob","tentacle","oral","fellatio","areolae","lactation","paizuri","piercing","sex","footjob","masturbation","hips","penis","testicles","ejaculation","cum","tamakeri","pussy","pubic","clitoris","mons","cameltoe","grinding","crotch","cervix","cunnilingus","insertion","penetration","fisting","fingering","peeing","ass","buttjob","spanked","anus","anal","anilingus","enema","x-ray","wakamezake","humiliation","tally","futa","incest","twincest","pegging","femdom","ganguro","bestiality","gangbang","3P","tribadism","molestation","voyeurism","exhibitionism","rape","spitroast","cock","69","doggystyle","missionary","virgin","shibari","bondage","bdsm","rope","pillory","stocks","bound","hogtie","frogtie","suspension","anal","dildo","vibrator","hitachi","nyotaimori","vore","amputee","transformation"]
+basetag = "masterpiece, best quality,"
 token = config.novelai_token
 header = {
     "authorization": "Bearer " + token,
@@ -13,49 +13,14 @@ header = {
     "user-agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/106.0.0.0 Safari/537.36",
 }
 
-
-def txt2img_body(seed, input, width, height):
+async def body(seed,input,width,height,group_id,image=None):
     if config.novelai_h:
-        uc = lowQuality
+        model="nai-diffusion"
     else:
-        htagstr = ""
-        for i in htags:
-            htagstr = htagstr+i+","
-        uc = lowQuality+htagstr
-    return {
-        "input": basetag + config.novelai_tag + "," + input,
-        "model": "safe-diffusion",
-        "parameters": {
+        model="safe-diffusion"
+    uc = lowQuality
+    parameters={
             "width": width,
-            "height": height,
-            "scale": 11,
-            "sampler": "k_euler_ancestral",
-            "qualityToggle": True,
-            "steps": 28,
-            "seed": seed,
-            "n_samples": 1,
-            "ucPreset": 0,
-            "uc": uc,
-        },
-    }
-
-
-def img2img_body(seed, input, width, height, image):
-    if config.novelai_h:
-        uc = lowQuality
-    else:
-        htagstr = ""
-        for i in htags:
-            htagstr = htagstr+i+","
-        uc = lowQuality+htagstr
-    return {
-        "input": basetag + config.novelai_tag + "," + input,
-        "model": "safe-diffusion",
-        "parameters": {
-            "width": width,
-            "image": image,
-            "noise": 0.2,
-            "strength": 0.7,
             "height": height,
             "qualityToggle": True,
             "scale": 11,
@@ -65,5 +30,15 @@ def img2img_body(seed, input, width, height, image):
             "n_samples": 1,
             "ucPreset": 0,
             "uc": uc,
-        },
+        }
+    if image:
+        parameters.update({
+            "image":image,
+            "strength":0.7,
+            "noise":0.2
+        })
+    return {
+        "input": basetag + await config.get_value(group_id,"tag") + "," + input,
+        "model": model,
+        "parameters": parameters
     }
