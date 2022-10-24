@@ -42,7 +42,7 @@ async def txt2img_handle(bot: Bot, event: GroupMessageEvent, args: Message = Com
     if img_url:
         if config.novelai_paid:
             async with aiohttp.ClientSession() as session:
-                logger.info(f"正在获取图片")
+                logger.info(f"检测到图片，自动切换到以图生图，正在获取图片")
                 for i in img_url:
                     async with session.get(i) as resp:
                         imgbytes.append(await resp.read())
@@ -50,15 +50,14 @@ async def txt2img_handle(bot: Bot, event: GroupMessageEvent, args: Message = Com
             await txt2img.finish(f"以图生图功能已禁用")
     if len(imgbytes)*count > config.novelai_oncemax:
         await txt2img.finish(f"最大只能同时生成{config.novelai_oncemax}张")
-    logger.debug(message_raw)
 
-    managetag = 0
+    managetag = None
     managelist = message_raw[0].split()
     match managelist:
         case ["off"]:
-            managetag = 1
+            managetag = False
         case ["on"]:
-            managetag = 2
+            managetag = True
         case ["set"]:
             group_config = await config.get_groupconfig(event.group_id)
             message = "当前群的设置为\n"
@@ -68,15 +67,15 @@ async def txt2img_handle(bot: Bot, event: GroupMessageEvent, args: Message = Com
         case ["set", arg, value]:
             if await GROUP_ADMIN(bot, event) or await GROUP_OWNER(bot, event):
                 await txt2img.finish(f"设置群聊{arg}为{value}完成" if await config.set_value(event.group_id, arg, value) else f"不正确的赋值")
-    if managetag:
+    if managetag is not None:
         if await GROUP_ADMIN(bot, event) or await GROUP_OWNER(bot, event):
-            result = config.set_enable(event.group_id, managetag-1)
+            result = await config.set_enable(event.group_id, managetag)
             logger.info(result)
             await txt2img.finish(result)
         else:
             await txt2img.finish(f"只有管理员可以使用管理功能")
     # 判断是否禁用，若没禁用，进入处理流程
-    if event.group_id not in config.novelai_ban:
+    if await config.get_value(event.group_id,"on") is not None:
         # 判断cd
         nowtime = time.time()
         deltatime = nowtime - cd.get(user_id, 0)
@@ -109,9 +108,6 @@ async def txt2img_handle(bot: Bot, event: GroupMessageEvent, args: Message = Com
                     else:
                         tags += i
 
-        if not tags:
-            await txt2img.finish(f"请描述你想要生成的角色特征(使用英文Tag,代码内已包含优化TAG)")
-
         # 处理奇奇怪怪的输入
         tags = re.sub("\s", "", tags)
         tags = file_name_check(tags)
@@ -131,7 +127,7 @@ async def txt2img_handle(bot: Bot, event: GroupMessageEvent, args: Message = Com
         if tagzh:
             tags_en = await translate(tagzh, "en")
             if tags_en == tagzh:
-                txt2img.finish(f"检测到中文，翻译失败，生成终止，请联系BOT主查看后台")
+                await txt2img.finish(f"检测到中文，翻译失败，生成终止，请联系BOT主查看后台")
             else:
                 tags_ += tags_en
         logger.info(f"获取到词条{tags_}")
@@ -139,9 +135,9 @@ async def txt2img_handle(bot: Bot, event: GroupMessageEvent, args: Message = Com
 
         # 检测是否有18+词条
         if not config.novelai_h:
-            for i in htags:
-                if i in tags.lower():
-                    await txt2img.finish("H是不行的!")
+            pattern=re.compile(f"(\s|,|^)({htags})(\s|,|$)")
+            if(re.search(pattern,tags)is not None):
+                await txt2img.finish("H是不行的!")
 
         if imgbytes:
             data_img = []
@@ -236,7 +232,7 @@ async def _run_gennerate(fifo: FIFO):
                     return f"生成失败，错误代码为{resp.status}"
                 img = await resp.text()
                 img_bytes.append(img.split("data:")[1])
-    message = f"Seed: {fifo.seed}"
+    message = f"Seed: {fifo.seed}\nTags:{fifo.tags}\n"
     if config.novelai_h:
         for i in img_bytes:
             await save_img(fifo.seed, fifo.tags, i)
@@ -259,7 +255,7 @@ async def _run_gennerate(fifo: FIFO):
                 if fifo.cost > 0:
                     await anlas_set(fifo.user_id, -fifo.cost)
                 return message
-            if label == "safe" or "questionable":
+            if label == "safe" or label == "questionable":
                 message += MessageSegment.image(f"base64://{i}")
             else:
                 nsfw_count += 1

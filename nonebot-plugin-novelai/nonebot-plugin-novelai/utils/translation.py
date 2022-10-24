@@ -50,15 +50,13 @@ async def translate_deepl(text: str, to: str) -> str | None:
     key = config.deepl_key
     if not key:
         return None
-    header = {
-        "Authorization": key,
-    }
     async with aiohttp.ClientSession() as session:
         params = {
+            "auth_key":key,
             "text": text,
             "target_lang": to,
         }
-        async with session.post('https://api-free.deepl.com/v2/translate', params=params, headers=header) as resp:
+        async with session.get('https://api-free.deepl.com/v2/translate', params=params) as resp:
             if resp.status != 200:
                 logger.error(f"DeepL翻译接口调用失败,错误代码{resp.status},{await resp.text()}")
                 return None

@@ -8,4 +8,3 @@ __plugin_meta__ = PluginMetadata(
 )
 
 #TODO 黑白名单
-#TODO 全年龄关闭时切换到FULL模型

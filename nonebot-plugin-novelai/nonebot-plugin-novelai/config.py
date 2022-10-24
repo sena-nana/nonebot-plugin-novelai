@@ -8,7 +8,7 @@ import json
 jsonpath = Path("data/novelai/config.json").resolve()
 
 
-class Config(BaseSettings):  # TODO修改为数据库
+class Config(BaseSettings):
     novelai_token: str = ""
     novelai_tag: str = ""
     novelai_cd: int = 60
@@ -18,12 +18,12 @@ class Config(BaseSettings):  # TODO修改为数据库
     novelai_site_domain: str = "https://novelai.net/"
     novelai_mode: str = "novelai"
     novelai_paid: int = 0
-    novelai_ban: list[int] = []  # TODO 修改为黑白名单
+    novelai_on: bool = True  # TODO 修改为黑白名单
     novelai_h: bool = False
     novelai_oncemax: int = 3
     bing_key: str = None
     deepl_key: str = None
-    __arglist = ["novelai_cd", "novelai_tag"]
+    __arglist = ["novelai_cd", "novelai_tag", "novelai_on"]
 
     @validator("novelai_cd", "novelai_oncemax")
     def non_negative(cls, v: int, field: ModelField):
@@ -65,19 +65,21 @@ class Config(BaseSettings):  # TODO修改为数据库
         cls.novelai_api_domain: str = "https://api.novelai.net/"
         cls.novelai_site_domain: str = "https://novelai.net/"
 
-    def set_enable(cls, groupid, enable):
-        if groupid in cls.novelai_ban:
-            if enable:
-                cls.novelai_ban.remove(groupid)
-                return f"aidraw开始运行"
-            else:
-                return f"aidraw已经处于关闭状态"
-        else:
+    async def set_enable(cls, group_id, enable):
+        await cls.__init_json()
+        now = await cls.get_value(group_id, "on")
+        if now:
             if enable:
                 return f"aidraw已经处于启动状态"
             else:
-                cls.novelai_ban.append(groupid)
+                await cls.set_value(group_id, "on", enable)
                 return f"aidraw已关闭"
+        else:
+            if enable:
+                await cls.set_value(group_id, "on", enable)
+                return f"aidraw开始运行"
+            else:
+                return f"aidraw已经处于关闭状态"
 
     class Config:
         extra = "ignore"
@@ -114,9 +116,13 @@ class Config(BaseSettings):  # TODO修改为数据库
         baseconfig.update(groupdict)
         return baseconfig
 
-    async def set_value(cls, group_id, arg, value:str|bool):
+    async def set_value(cls, group_id, arg, value: str):
         if value.isdigit():
-            value:int=int(value)
+            value: int = int(value)
+        elif value.lower()=="false":
+            value=False
+        elif value.lower()=="true":
+            value=True
         group_id = str(group_id)
         arg_ = "novelai_"+arg
         if arg_ in cls.__arglist and isinstance(value, type(cls.__dict__[arg_])):
@@ -126,7 +132,7 @@ class Config(BaseSettings):  # TODO修改为数据库
                 configdict: dict = json.loads(jsonraw)
             groupdict = configdict.get(group_id, {})
             if value == "default":
-                groupdict[arg_] = False
+                groupdict[arg_] = None
             else:
                 groupdict[arg_] = value
             configdict[group_id] = groupdict
@@ -137,6 +143,7 @@ class Config(BaseSettings):  # TODO修改为数据库
         else:
             logger.error(f"不正确的赋值")
             return False
+
 
 config = Config(**get_driver().config.dict())
 logger.debug(f"加载config完成" + str(config))

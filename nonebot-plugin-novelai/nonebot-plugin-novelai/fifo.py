@@ -1,4 +1,4 @@
-from dataclasses import dataclass
+from dataclasses import dataclass, field
 from io import BytesIO
 from PIL import Image
 import base64
@@ -9,10 +9,10 @@ from nonebot import get_driver
 class IMG():
     width: int=512
     height: int=512
-    image: str=None
+    image: str=field(default=None,repr=False)
 
     def __post_init__(self):
-        if self.image is not None:
+        if self.image:
             tmpfile = BytesIO(self.image)
             image = Image.open(tmpfile)
             width, height = image.size
