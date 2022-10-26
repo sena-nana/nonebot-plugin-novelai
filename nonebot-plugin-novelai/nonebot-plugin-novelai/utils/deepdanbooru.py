@@ -23,16 +23,16 @@ async def deepdanbooru_handle(event: GroupMessageEvent):
         start = "data:image/jpeg;base64,"
         str0 = start+str_img
         async with aiohttp.ClientSession() as session:
-            async with session.post('https://hf.space/embed/mayhug/rf5-anime-image-label/api/predict/', json={"data": [str0, 0.2]}) as resp:
+            async with session.post('https://mayhug-rainchan-anime-image-label.hf.space/api/predict/', json={"data": [str0, 0.6,"ResNet101"]}) as resp:
                 if resp.status != 200:
                     await deepdanbooru.finish(f"识别失败，错误代码为{resp.status}")
                 jsonresult = await resp.json()
                 data = jsonresult['data'][0]
-                logger.info(f"TAG查询完毕，{data}")
+                logger.info(f"TAG查询完毕")
                 tags = ""
                 for label in data['confidences']:
                     tags = tags+label["label"]+","
-        tags_ch = await translate(tags.replace("_", " "), "zh-Hans")
+        tags_ch = await translate(tags.replace("_", " "), "zh")
         if tags_ch == tags.replace("_", " "):
             message = message+tags
         message = message+tags+f"\n机翻结果:"+tags_ch
