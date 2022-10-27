@@ -63,8 +63,10 @@ async def txt2img_handle(bot: Bot, event: GroupMessageEvent, args: Message = Com
                 message += f"{i}:{v}\n"
             await txt2img.finish(message)
         case ["set", arg, value]:
-            if await GROUP_ADMIN(bot, event) or await GROUP_OWNER(bot, event):
+            if await GROUP_ADMIN(bot, event) or await GROUP_OWNER(bot, event) or event.user_id in get_driver().config.superusers:
                 await txt2img.finish(f"设置群聊{arg}为{value}完成" if await config.set_value(event.group_id, arg, value) else f"不正确的赋值")
+            else:
+                await txt2img.finish(f"只有管理员可以使用管理功能")
     if managetag is not None:
         if await GROUP_ADMIN(bot, event) or await GROUP_OWNER(bot, event) or event.user_id in get_driver().config.superusers:
             result = await config.set_enable(event.group_id, managetag)
@@ -132,7 +134,7 @@ async def txt2img_handle(bot: Bot, event: GroupMessageEvent, args: Message = Com
             if (re.search(pattern, tags) is not None):
                 await txt2img.finish("H是不行的!")
         # 初始化队列
-        tags = await config.get_value(event.group_id, "tag") + "," + tags
+        tags = await config.get_value(event.group_id, "tag") + "," + tags_
         if imgbytes:
             fifo = FIFO(user_id, tags, seed, event.group_id, image=imgbytes)
         else:

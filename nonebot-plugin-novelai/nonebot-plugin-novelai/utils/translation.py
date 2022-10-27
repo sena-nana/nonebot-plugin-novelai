@@ -1,3 +1,4 @@
+from re import L
 import aiohttp
 from ..config import config
 from nonebot.log import logger
@@ -37,9 +38,10 @@ async def translate_bing(text: str, to: str) -> str | None:
             if resp.status != 200:
                 logger.error(f"Bing翻译接口调用失败,错误代码{resp.status},{await resp.text()}")
                 return None
-            logger.debug(f"Bing翻译启动")
             jsonresult = await resp.json()
-            return jsonresult[0]["translations"][0]["text"]
+            result=jsonresult[0]["translations"][0]["text"]
+            logger.debug(f"Bing翻译启动，获取到{text},翻译后{result}")
+            return result
 
 
 async def translate_deepl(text: str, to: str) -> str | None:
@@ -60,9 +62,11 @@ async def translate_deepl(text: str, to: str) -> str | None:
             if resp.status != 200:
                 logger.error(f"DeepL翻译接口调用失败,错误代码{resp.status},{await resp.text()}")
                 return None
-            logger.debug(f"DeepL翻译启动")
+            
             jsonresult = await resp.json()
-            return jsonresult["translations"][0]["text"]
+            result=jsonresult["translations"][0]["text"]
+            logger.debug(f"DeepL翻译启动，获取到{text},翻译后{result}")
+            return result
 
 
 async def translate_youdao(input: str, type: str) -> str | None:
@@ -85,9 +89,10 @@ async def translate_youdao(input: str, type: str) -> str | None:
             if resp.status != 200:
                 logger.error(f"有道翻译接口调用失败,错误代码{resp.status},{await resp.text()}")
                 return None
-            logger.debug(f"有道翻译启动")
             result = await resp.json()
-            return result["translateResult"][0][0]["tgt"]
+            result=result["translateResult"][0][0]["tgt"]
+            logger.debug(f"有道翻译启动，获取到{input},翻译后{result}")
+            return result
 
 
 async def translate_google_proxy(input: str, to: str):
@@ -104,6 +109,7 @@ async def translate_google_proxy(input: str, to: str):
             if resp.status != 200:
                 logger.error(f"谷歌代理翻译接口调用失败,错误代码{resp.status},{await resp.text()}")
                 return None
-            logger.debug(f"谷歌代理翻译启动")
             result = await resp.json()
-            return result["data"][0]
+            result=result["data"][0]
+            logger.debug(f"谷歌代理翻译启动，获取到{input},翻译后{result}")
+            return result

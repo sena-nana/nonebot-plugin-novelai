@@ -144,7 +144,7 @@ class Config(BaseSettings):
             # 设置值
             groupdict = configdict.get(group_id, {})
             if value == "default":
-                groupdict[arg_] = None
+                groupdict[arg_] = False
             else:
                 groupdict[arg_] = value
             configdict[group_id] = groupdict
