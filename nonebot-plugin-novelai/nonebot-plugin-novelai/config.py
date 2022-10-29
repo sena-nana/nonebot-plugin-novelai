@@ -13,8 +13,10 @@ class Config(BaseSettings):
     novelai_tag: str = ""  # 内置的tag
     novelai_uc: str = ""  # 内置的反tag
     novelai_cd: int = 60  # 默认的cd
+    novelai_pure: bool = False  # 是否启用简洁返回模式（只返回图片，不返回tag等数据）
     novelai_limit: bool = True  # 是否开启限速
-    novelai_save_pic: bool = True  # 是否开启保存至本地
+    novelai_save_pic: bool = True  # 是否保存图片至本地
+    novelai_save_detail: bool = False  # 是否保存图片信息至本地
     novelai_api_domain: str = "https://api.novelai.net/"
     novelai_site_domain: str = "https://novelai.net/"
     novelai_mode: str = "novelai"
@@ -26,7 +28,10 @@ class Config(BaseSettings):
     deepl_key: str = None  # deepL的翻译key
 
     # 允许单群设置的设置
-    __arglist = ["novelai_cd", "novelai_tag", "novelai_on", "novelai_uc"]
+    def keys(cls):
+        return ("novelai_cd", "novelai_tag", "novelai_on", "novelai_uc","novelai_pure")
+    def __getitem__(cls,item):
+        return getattr(cls,item)
 
     @validator("novelai_cd", "novelai_oncemax")
     def non_negative(cls, v: int, field: ModelField):
@@ -79,11 +84,11 @@ class Config(BaseSettings):
             if enable:
                 return f"aidraw已经处于启动状态"
             else:
-                await cls.set_value(group_id, "on", enable)
+                await cls.set_value(group_id, "on","False")
                 return f"aidraw已关闭"
         else:
             if enable:
-                await cls.set_value(group_id, "on", enable)
+                await cls.set_value(group_id, "on","True")
                 return f"aidraw开始运行"
             else:
                 return f"aidraw已经处于关闭状态"
@@ -99,12 +104,12 @@ class Config(BaseSettings):
         # 获取设置值
         group_id = str(group_id)
         arg_ = arg if arg.startswith("novelai_") else "novelai_"+arg
-        if arg_ in cls.__arglist:
+        if arg_ in cls.keys():
             await cls.__init_json()
             async with aiofiles.open(jsonpath, "r") as f:
                 jsonraw = await f.read()
                 configdict: dict = json.loads(jsonraw)
-                return configdict.get(group_id, {}).get(arg_, None) or cls.__dict__[arg_]
+                return configdict.get(group_id, {}).get(arg_, False) or dict(cls)[arg_]
         else:
             return None
 
@@ -115,27 +120,26 @@ class Config(BaseSettings):
         async with aiofiles.open(jsonpath, "r") as f:
             jsonraw = await f.read()
             configdict: dict = json.loads(jsonraw)
-            groupdict: dict = configdict.get(group_id, {})
-        baseconfig = {}
-        for i, v in cls.__dict__.items():
-            if i in cls.__arglist:
-                baseconfig[i] = v
-        baseconfig.update(groupdict)
-        return baseconfig
+            baseconfig = {}
+            for i in cls.keys():
+                value = configdict.get(group_id, {}).get(
+                    i, False) or dict(cls)[i]
+                baseconfig[i] = value
+            return baseconfig
 
     async def set_value(cls, group_id, arg: str, value: str):
         """设置当群设置值"""
         # 将值转化为bool和int
         if value.isdigit():
-            value: int = int(value)
+                value: int = int(value)
         elif value.lower() == "false":
-            value = False
+                value = False
         elif value.lower() == "true":
-            value = True
+                value = True
         group_id = str(group_id)
         arg_ = arg if arg.startswith("novelai_") else "novelai_"+arg
         # 判断是否合法
-        if arg_ in cls.__arglist and isinstance(value, type(cls.__dict__[arg_])):
+        if arg_ in cls.keys() and isinstance(value, type(dict(cls)[arg_])):
             await cls.__init_json()
             # 读取文件
             async with aiofiles.open(jsonpath, "r") as f:
@@ -154,9 +158,9 @@ class Config(BaseSettings):
                 await f.write(jsonnew)
             return True
         else:
-            logger.error(f"不正确的赋值")
+            logger.debug(f"不正确的赋值")
             return False
 
 
 config = Config(**get_driver().config.dict())
-logger.debug(f"加载config完成" + str(config))
+logger.info(f"加载config完成" + str(config))

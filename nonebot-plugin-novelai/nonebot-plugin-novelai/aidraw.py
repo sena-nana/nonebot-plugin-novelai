@@ -4,6 +4,7 @@ import time
 from pathlib import Path
 import aiofiles
 import aiohttp
+import hashlib
 import re
 import asyncio
 from nonebot import get_bot, get_driver, on_command
@@ -12,7 +13,7 @@ from nonebot.adapters.onebot.v11 import GROUP_ADMIN, GROUP_OWNER
 from nonebot.log import logger
 from nonebot.params import CommandArg
 from .config import config
-from .utils import is_contain_chinese, file_name_check, auto_filename
+from .utils import is_contain_chinese, file_name_check
 from .utils.translation import translate
 from .version import version
 from .utils.anlas import anlas_check, anlas_set
@@ -62,7 +63,11 @@ async def txt2img_handle(bot: Bot, event: GroupMessageEvent, args: Message = Com
             for i, v in group_config.items():
                 message += f"{i}:{v}\n"
             await txt2img.finish(message)
-        case ["set", arg, value]:
+        case ["set", arg, *value]:
+            value_str=""
+            for i in value:
+                value_str=value_str+i+" "
+            value=value_str
             if await GROUP_ADMIN(bot, event) or await GROUP_OWNER(bot, event) or event.user_id in get_driver().config.superusers:
                 await txt2img.finish(f"设置群聊{arg}为{value}完成" if await config.set_value(event.group_id, arg, value) else f"不正确的赋值")
             else:
@@ -190,14 +195,29 @@ async def fifo_gennerate(fifo: FIFO = None):
             im = await _run_gennerate(fifo)
         except:
             logger.exception("生成失败")
-            im = "生成失败，请联系BOT主排查原因"
+            await bot.send_group_msg(
+                message="生成失败，请联系BOT主排查原因",
+                group_id=fifo.group_id
+                )
         else:
             logger.info(f"队列剩余{get_wait_num()}人 | 生成完毕：{fifo}")
 
-        await bot.send_group_msg(
-            message=MessageSegment.at(fifo.user_id) + im,
-            group_id=fifo.group_id,
-        )
+        if await config.get_value(fifo.group_id,"pure"):
+            message=MessageSegment.at(fifo.user_id)
+            for i in im["image"]:
+                message+=i
+            await bot.send_group_msg(
+                message=message,
+                group_id=fifo.group_id,
+            )
+        else:
+            message=[]
+            for i in im:
+                message.append(MessageSegment.node_custom(bot.self_id,nickname,i))
+            await bot.send_group_forward_msg(
+                messages=message,
+                group_id=fifo.group_id,
+            )
 
     if fifo:
         await generate(fifo)
@@ -221,11 +241,11 @@ async def fifo_gennerate(fifo: FIFO = None):
 async def _run_gennerate(fifo: FIFO):
     # 处理单个请求
     img_bytes = await post(fifo)
-    message = f"Seed: {fifo.seed}\nTags:{fifo.tags}\n"
+    message = MessageSegment.text(fifo.format())
     # 判断是否允许H
     if config.novelai_h:
         for i in img_bytes:
-            await save_img(fifo.seed, fifo.tags, i)
+            await save_img(fifo, i)
             message += MessageSegment.image(i)
     else:
         nsfw_count = 0
@@ -239,22 +259,26 @@ async def _run_gennerate(fifo: FIFO):
                 message += MessageSegment.image(i)
             else:
                 nsfw_count += 1
-            await save_img(fifo.seed, fifo.tags, i, label)
-        message += f"\n有{nsfw_count}张图片太涩了，{nickname}已经帮你吃掉了哦" if nsfw_count > 0 else f"\n"
+            await save_img(fifo, i, label)
+        if nsfw_count>0:
+            message += f"\n有{nsfw_count}张图片太涩了，{nickname}已经帮你吃掉了哦"
     #扣除点数
     if fifo.cost > 0:
         await anlas_set(fifo.user_id, -fifo.cost)
     return message
 
 
-async def save_img(seed, tags, img_bytes, extra: str = "unknown"):
+async def save_img(fifo, img_bytes:BytesIO, extra: str = "unknown"):
     #存储图片
     if config.novelai_save_pic:
         path_ = path/extra
         path_.mkdir(parents=True, exist_ok=True)
-        file = path_/f"{seed}_{tags[:100]}.jpg"
-        async with aiofiles.open(auto_filename(file), "wb") as f:
+        hash=hashlib.md5(img_bytes.getvalue()).hexdigest()
+        file = (path_/hash).resolve()
+        async with aiofiles.open(str(file)+".jpg", "wb") as f:
             await f.write(img_bytes.getvalue())
+        async with aiofiles.open(str(file)+".txt","w") as f:
+            await f.write(fifo.format())
 
 
 async def check_safe(img_bytes:BytesIO):

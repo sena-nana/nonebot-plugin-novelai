@@ -55,24 +55,6 @@ async def sendtosuperuser(message):
         })
         await asyncio.sleep(5)
 
-
-def auto_filename(path: Path):
-    # 自动重命名文件名
-    directory = path.parent
-    file_name = path.parts[-1]
-    while path.exists():
-        pattern = '_\d+\.'
-        if re.search(pattern, file_name) is None:
-            file_name = file_name.replace('.', '_0.')
-        else:
-            current_number = int(re.findall(pattern, file_name)[-1])
-            new_number = current_number + 1
-            file_name = file_name.replace(
-                f'({current_number}).', f'({new_number}).')
-        path = directory/file_name
-    return path
-
-
 async def png2jpg(raw: BytesIO):
     img_PIL = Image.open(raw)
     img_PIL.convert("RGB")

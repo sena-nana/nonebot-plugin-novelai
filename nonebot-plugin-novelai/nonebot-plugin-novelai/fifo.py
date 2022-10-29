@@ -101,3 +101,13 @@ class FIFO():
             "model": self.model,
             "parameters": parameters
         }
+    def keys(self):
+        return ("seed","tags","uc","scale","strength","noise","samper","model","steps","width","height")
+    def __getitem__(self,item):
+        return getattr(self,item)
+    def format(self):
+        dict_self=dict(self)
+        str=""
+        for i,v in dict_self.items():
+            str+=f"{i}={v}\n"
+        return str
