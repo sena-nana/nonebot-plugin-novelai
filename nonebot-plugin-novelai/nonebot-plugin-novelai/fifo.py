@@ -14,7 +14,9 @@ header = {
     "user-agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/106.0.0.0 Safari/537.36",
 }
 
-#自动切换模型
+# 自动切换模型
+
+
 def set_model():
     if config.novelai_h:
         return "nai-diffusion"
@@ -40,15 +42,16 @@ class FIFO():
     uc: str = ""
     width: int = 512
     height: int = 512
+    img2img: bool = False
     image: str = field(default=None, repr=False)
 
     def __post_init__(self):
-        #数值合法检查
+        # 数值合法检查
         if self.steps <= 0 or self.steps > 50:
             self.steps = 28
         self.uc = lowQuality+self.uc
         self.__image_check()
-        #计算cost
+        # 计算cost
         if config.novelai_paid == 1:
             anlas = 0
             if (self.width*self.height > 409600) or self.image or self.count > 1:
@@ -62,7 +65,7 @@ class FIFO():
             self.cost = 0
 
     def __image_check(self):
-        #根据图片重写长宽
+        # 根据图片重写长宽
         if self.image is not None:
             tmpfile = BytesIO(self.image)
             image = Image.open(tmpfile)
@@ -75,9 +78,10 @@ class FIFO():
                 self.width = 512
             self.image = str(base64.b64encode(self.image), "utf-8")
             self.steps = 50
+            self.img2img = True
 
     def body(self):
-        #获取请求体
+        # 获取请求体
         parameters = {
             "width": self.width,
             "height": self.height,
@@ -90,7 +94,7 @@ class FIFO():
             "ucPreset": 0,
             "uc": self.uc,
         }
-        if self.image is not None:
+        if self.img2img:
             parameters.update({
                 "image": self.image,
                 "strength": self.strength,
@@ -101,13 +105,16 @@ class FIFO():
             "model": self.model,
             "parameters": parameters
         }
+
     def keys(self):
-        return ("seed","tags","uc","scale","strength","noise","samper","model","steps","width","height")
-    def __getitem__(self,item):
-        return getattr(self,item)
+        return ("seed", "tags", "uc", "scale", "strength", "noise", "samper", "model", "steps", "width", "height","img2img")
+
+    def __getitem__(self, item):
+        return getattr(self, item)
+
     def format(self):
-        dict_self=dict(self)
-        str=""
-        for i,v in dict_self.items():
-            str+=f"{i}={v}\n"
+        dict_self = dict(self)
+        str = ""
+        for i, v in dict_self.items():
+            str += f"{i}={v}\n"
         return str

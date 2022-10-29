@@ -21,7 +21,7 @@ from .fifo import FIFO
 from .data import htags
 from .novelai import post
 path = Path("data/novelai/output").resolve()
-txt2img = on_command(".aidraw", aliases={"绘画", "咏唱", "约稿", "召唤"})
+txt2img = on_command(".aidraw", aliases={"绘画", "咏唱", "召唤"})
 
 cd = {}
 gennerating = False
@@ -38,6 +38,10 @@ async def txt2img_handle(bot: Bot, event: GroupMessageEvent, args: Message = Com
     count = 1
     # 以图生图预处理
     img_url = ""
+    reply=event.reply
+    if reply:
+        for seg in reply.message['image']:
+            img_url = seg.data["url"]
     for seg in event.message['image']:
         img_url = seg.data["url"]
     imgbytes = ""
