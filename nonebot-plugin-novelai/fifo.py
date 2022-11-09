@@ -1,10 +1,13 @@
+import base64
 from dataclasses import dataclass, field
 from io import BytesIO
+
 from PIL import Image
-import base64
-from .config import config
 from nonebot import get_driver
+
+from .config import config
 from .data import lowQuality
+
 header = {
     "authorization": "Bearer " + config.novelai_token,
     ":authority": config.novelai_api_domain,
@@ -13,6 +16,7 @@ header = {
     "referer": config.novelai_site_domain,
     "user-agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/106.0.0.0 Safari/537.36",
 }
+
 
 # 自动切换模型
 
@@ -49,14 +53,14 @@ class FIFO():
         # 数值合法检查
         if self.steps <= 0 or self.steps > 50:
             self.steps = 28
-        self.uc = lowQuality+self.uc
+        self.uc = lowQuality + self.uc
         self.__image_check()
         # 计算cost
         if config.novelai_paid == 1:
             anlas = 0
-            if (self.width*self.height > 409600) or self.image or self.count > 1:
-                anlas += round(self.width*self.height *
-                               self.strength*self.count*self.steps/2293750)
+            if (self.width * self.height > 409600) or self.image or self.count > 1:
+                anlas += round(self.width * self.height *
+                               self.strength * self.count * self.steps / 2293750)
             if self.user_id in get_driver().config.superusers:
                 self.cost = 0
             else:
@@ -71,10 +75,10 @@ class FIFO():
             image = Image.open(tmpfile)
             width, height = image.size
             if width >= height:
-                self.width = round(width/height*8)*64
+                self.width = round(width / height * 8) * 64
                 self.height = 512
             else:
-                self.height = round(height/width*8)*64
+                self.height = round(height / width * 8) * 64
                 self.width = 512
             self.image = str(base64.b64encode(self.image), "utf-8")
             self.steps = 50
@@ -107,7 +111,8 @@ class FIFO():
         }
 
     def keys(self):
-        return ("seed", "tags", "uc", "scale", "strength", "noise", "samper", "model", "steps", "width", "height","img2img")
+        return (
+        "seed", "tags", "uc", "scale", "strength", "noise", "samper", "model", "steps", "width", "height", "img2img")
 
     def __getitem__(self, item):
         return getattr(self, item)

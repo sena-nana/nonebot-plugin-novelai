@@ -1,10 +1,12 @@
-from pydantic import BaseSettings, validator
+import json
+from pathlib import Path
+
+import aiofiles
 from nonebot import get_driver
 from nonebot.log import logger
+from pydantic import BaseSettings, validator
 from pydantic.fields import ModelField
-from pathlib import Path
-import aiofiles
-import json
+
 jsonpath = Path("data/novelai/config.json").resolve()
 
 
@@ -29,9 +31,10 @@ class Config(BaseSettings):
 
     # 允许单群设置的设置
     def keys(cls):
-        return ("novelai_cd", "novelai_tag", "novelai_on", "novelai_uc","novelai_pure")
-    def __getitem__(cls,item):
-        return getattr(cls,item)
+        return ("novelai_cd", "novelai_tag", "novelai_on", "novelai_uc", "novelai_pure")
+
+    def __getitem__(cls, item):
+        return getattr(cls, item)
 
     @validator("novelai_cd", "novelai_oncemax")
     def non_negative(cls, v: int, field: ModelField):
@@ -84,12 +87,12 @@ class Config(BaseSettings):
             if enable:
                 return f"aidraw已经处于启动状态"
             else:
-                await cls.set_value(group_id, "on","False")
-                return f"aidraw已关闭"
+                if await cls.set_value(group_id, "on", "False"):
+                    return f"aidraw已关闭"
         else:
             if enable:
-                await cls.set_value(group_id, "on","True")
-                return f"aidraw开始运行"
+                if await cls.set_value(group_id, "on", "True"):
+                    return f"aidraw开始运行"
             else:
                 return f"aidraw已经处于关闭状态"
 
@@ -97,19 +100,19 @@ class Config(BaseSettings):
         # 初始化设置文件
         if not jsonpath.exists():
             jsonpath.parent.mkdir(parents=True, exist_ok=True)
-            async with aiofiles.open(jsonpath, "w+")as f:
+            async with aiofiles.open(jsonpath, "w+") as f:
                 await f.write("{}")
 
     async def get_value(cls, group_id, arg: str):
         # 获取设置值
         group_id = str(group_id)
-        arg_ = arg if arg.startswith("novelai_") else "novelai_"+arg
+        arg_ = arg if arg.startswith("novelai_") else "novelai_" + arg
         if arg_ in cls.keys():
             await cls.__init_json()
             async with aiofiles.open(jsonpath, "r") as f:
                 jsonraw = await f.read()
                 configdict: dict = json.loads(jsonraw)
-                return configdict.get(group_id, {}).get(arg_, False) or dict(cls)[arg_]
+                return configdict.get(group_id, {}).get(arg_) or dict(cls)[arg_]
         else:
             return None
 
@@ -123,21 +126,22 @@ class Config(BaseSettings):
             baseconfig = {}
             for i in cls.keys():
                 value = configdict.get(group_id, {}).get(
-                    i, False) or dict(cls)[i]
+                    i) or dict(cls)[i]
                 baseconfig[i] = value
+            logger.debug(baseconfig)
             return baseconfig
 
     async def set_value(cls, group_id, arg: str, value: str):
         """设置当群设置值"""
         # 将值转化为bool和int
         if value.isdigit():
-                value: int = int(value)
+            value: int = int(value)
         elif value.lower() == "false":
-                value = False
+            value = False
         elif value.lower() == "true":
-                value = True
+            value = True
         group_id = str(group_id)
-        arg_ = arg if arg.startswith("novelai_") else "novelai_"+arg
+        arg_ = arg if arg.startswith("novelai_") else "novelai_" + arg
         # 判断是否合法
         if arg_ in cls.keys() and isinstance(value, type(dict(cls)[arg_])):
             await cls.__init_json()
@@ -158,7 +162,7 @@ class Config(BaseSettings):
                 await f.write(jsonnew)
             return True
         else:
-            logger.debug(f"不正确的赋值")
+            logger.debug(f"不正确的赋值,{arg_},{value},{type(value)}")
             return False
 
 

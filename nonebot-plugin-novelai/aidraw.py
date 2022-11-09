@@ -1,34 +1,40 @@
+import asyncio
 import base64
-from io import BytesIO
-import time
-from pathlib import Path
-import aiofiles
-import aiohttp
 import hashlib
 import re
-import asyncio
+import time
+from collections import deque
+from io import BytesIO
+from pathlib import Path
+
+import aiofiles
+import aiohttp
 from nonebot import get_bot, get_driver, on_command
-from nonebot.adapters.onebot.v11 import GroupMessageEvent, Message, MessageSegment, Bot
 from nonebot.adapters.onebot.v11 import GROUP_ADMIN, GROUP_OWNER
+from nonebot.adapters.onebot.v11 import GroupMessageEvent, Message, MessageSegment, Bot
 from nonebot.log import logger
 from nonebot.params import CommandArg
+
 from .config import config
+from .data import htags
+from .fifo import FIFO
+from .novelai import post
 from .utils import is_contain_chinese, file_name_check
+from .utils.anlas import anlas_check, anlas_set
 from .utils.translation import translate
 from .version import version
-from .utils.anlas import anlas_check, anlas_set
-from .fifo import FIFO
-from .data import htags
-from .novelai import post
+
 path = Path("data/novelai/output").resolve()
 txt2img = on_command(".aidraw", aliases={"绘画", "咏唱", "召唤"})
 
 cd = {}
 gennerating = False
-limit_list = []
+limit_list = deque([])
 nickname = ""
 for i in get_driver().config.nickname:
     nickname = i
+if not nickname:
+    nickname = "nonebot-plugin-novelai"
 
 
 @txt2img.handle()
@@ -38,7 +44,7 @@ async def txt2img_handle(bot: Bot, event: GroupMessageEvent, args: Message = Com
     count = 1
     # 以图生图预处理
     img_url = ""
-    reply=event.reply
+    reply = event.reply
     if reply:
         for seg in reply.message['image']:
             img_url = seg.data["url"]
@@ -68,16 +74,19 @@ async def txt2img_handle(bot: Bot, event: GroupMessageEvent, args: Message = Com
                 message += f"{i}:{v}\n"
             await txt2img.finish(message)
         case ["set", arg, *value]:
-            value_str=""
+            value_str = ""
             for i in value:
-                value_str=value_str+i+" "
-            value=value_str
-            if await GROUP_ADMIN(bot, event) or await GROUP_OWNER(bot, event) or event.user_id in get_driver().config.superusers:
-                await txt2img.finish(f"设置群聊{arg}为{value}完成" if await config.set_value(event.group_id, arg, value) else f"不正确的赋值")
+                value_str = value_str + i + " "
+            value = value_str
+            if await GROUP_ADMIN(bot, event) or await GROUP_OWNER(bot, event) or str(
+                    event.user_id) in get_driver().config.superusers:
+                await txt2img.finish(f"设置群聊{arg}为{value}完成" if await config.set_value(event.group_id, arg,
+                                                                                             value) else f"不正确的赋值")
             else:
                 await txt2img.finish(f"只有管理员可以使用管理功能")
     if managetag is not None:
-        if await GROUP_ADMIN(bot, event) or await GROUP_OWNER(bot, event) or event.user_id in get_driver().config.superusers:
+        if await GROUP_ADMIN(bot, event) or await GROUP_OWNER(bot,
+                                                              event) or event.user_id in get_driver().config.superusers:
             result = await config.set_enable(event.group_id, managetag)
             logger.info(result)
             await txt2img.finish(result)
@@ -90,7 +99,7 @@ async def txt2img_handle(bot: Bot, event: GroupMessageEvent, args: Message = Com
         deltatime = nowtime - cd.get(user_id, 0)
         cd_ = int(await config.get_value(event.group_id, "cd"))
         if (deltatime) < cd_:
-            await txt2img.finish(f"你冲的太快啦，请休息一下吧，剩余CD为{cd_-int(deltatime)}s")
+            await txt2img.finish(f"你冲的太快啦，请休息一下吧，剩余CD为{cd_ - int(deltatime)}s")
         else:
             cd[user_id] = nowtime
 
@@ -154,7 +163,7 @@ async def txt2img_handle(bot: Bot, event: GroupMessageEvent, args: Message = Com
             anlascost = fifo.cost
             hasanlas = await anlas_check(fifo.user_id)
             if hasanlas >= anlascost:
-                await wait_fifo(fifo, anlascost, hasanlas-anlascost)
+                await wait_fifo(fifo, anlascost, hasanlas - anlascost)
             else:
                 await txt2img.finish(f"你的点数不足，你的剩余点数为{hasanlas}")
         else:
@@ -202,22 +211,22 @@ async def fifo_gennerate(fifo: FIFO = None):
             await bot.send_group_msg(
                 message="生成失败，请联系BOT主排查原因",
                 group_id=fifo.group_id
-                )
+            )
         else:
             logger.info(f"队列剩余{get_wait_num()}人 | 生成完毕：{fifo}")
 
-        if await config.get_value(fifo.group_id,"pure"):
-            message=MessageSegment.at(fifo.user_id)
+        if await config.get_value(fifo.group_id, "pure"):
+            message = MessageSegment.at(fifo.user_id)
             for i in im["image"]:
-                message+=i
+                message += i
             await bot.send_group_msg(
                 message=message,
                 group_id=fifo.group_id,
             )
         else:
-            message=[]
+            message = []
             for i in im:
-                message.append(MessageSegment.node_custom(bot.self_id,nickname,i))
+                message.append(MessageSegment.node_custom(bot.self_id, nickname, i))
             await bot.send_group_forward_msg(
                 messages=message,
                 group_id=fifo.group_id,
@@ -231,7 +240,7 @@ async def fifo_gennerate(fifo: FIFO = None):
         gennerating = True
 
         while len(limit_list) > 0:
-            fifo = limit_list.pop(0)
+            fifo = limit_list.popleft()
             try:
                 await generate(fifo)
             except:
@@ -264,38 +273,39 @@ async def _run_gennerate(fifo: FIFO):
             else:
                 nsfw_count += 1
             await save_img(fifo, i, label)
-        if nsfw_count>0:
+        if nsfw_count > 0:
             message += f"\n有{nsfw_count}张图片太涩了，{nickname}已经帮你吃掉了哦"
-    #扣除点数
+    # 扣除点数
     if fifo.cost > 0:
         await anlas_set(fifo.user_id, -fifo.cost)
     return message
 
 
-async def save_img(fifo, img_bytes:BytesIO, extra: str = "unknown"):
-    #存储图片
+async def save_img(fifo, img_bytes: BytesIO, extra: str = "unknown"):
+    # 存储图片
     if config.novelai_save_pic:
-        path_ = path/extra
+        path_ = path / extra
         path_.mkdir(parents=True, exist_ok=True)
-        hash=hashlib.md5(img_bytes.getvalue()).hexdigest()
-        file = (path_/hash).resolve()
-        async with aiofiles.open(str(file)+".jpg", "wb") as f:
+        hash = hashlib.md5(img_bytes.getvalue()).hexdigest()
+        file = (path_ / hash).resolve()
+        async with aiofiles.open(str(file) + ".jpg", "wb") as f:
             await f.write(img_bytes.getvalue())
-        async with aiofiles.open(str(file)+".txt","w") as f:
+        async with aiofiles.open(str(file) + ".txt", "w") as f:
             await f.write(fifo.format())
 
 
-async def check_safe(img_bytes:BytesIO):
-    #检查图片是否安全
+async def check_safe(img_bytes: BytesIO):
+    # 检查图片是否安全
     start = "data:image/jpeg;base64,"
-    image=img_bytes.getvalue()
-    image=str(base64.b64encode(image), "utf-8")
-    str0 = start+image
-    #重试三次
+    image = img_bytes.getvalue()
+    image = str(base64.b64encode(image), "utf-8")
+    str0 = start + image
+    # 重试三次
     for i in range(3):
         async with aiohttp.ClientSession() as session:
-            #调用API
-            async with session.post('https://hf.space/embed/mayhug/rainchan-image-porn-detection/api/predict/', json={"data": [str0]}) as resp:
+            # 调用API
+            async with session.post('https://hf.space/embed/mayhug/rainchan-image-porn-detection/api/predict/',
+                                    json={"data": [str0]}) as resp:
                 if resp.status == 200:
                     jsonresult = await resp.json()
                     break
