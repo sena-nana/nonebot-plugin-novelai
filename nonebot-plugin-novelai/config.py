@@ -8,12 +8,14 @@ from pydantic import BaseSettings, validator
 from pydantic.fields import ModelField
 
 jsonpath = Path("data/novelai/config.json").resolve()
+nickname = list(get_driver().config.nickname)[0] if len(
+    get_driver().config.nickname) else "nonebot-plugin-novelai"
 
 
 class Config(BaseSettings):
     novelai_token: str = ""  # 官网的token
-    novelai_tag: str = ""  # 内置的tag
-    novelai_uc: str = ""  # 内置的反tag
+    novelai_tags: str = ""  # 内置的tag
+    novelai_ntags: str = ""  # 内置的反tag
     novelai_cd: int = 60  # 默认的cd
     novelai_pure: bool = False  # 是否启用简洁返回模式（只返回图片，不返回tag等数据）
     novelai_limit: bool = True  # 是否开启限速
@@ -25,18 +27,19 @@ class Config(BaseSettings):
     novelai_paid: int = 0  # 0为禁用付费模式，1为点数制，2为不限制
     novelai_on: bool = True  # 是否全局开启
     novelai_h: bool = False  # 是否允许H
-    novelai_oncemax: int = 3  # 每次能够生成的最大数量
+    novelai_max: int = 3  # 每次能够生成的最大数量
+    novelai_revoke: int = 0  # 是否自动撤回，该值不为0时，则为撤回时间
     bing_key: str = None  # bing的翻译key
     deepl_key: str = None  # deepL的翻译key
 
     # 允许单群设置的设置
     def keys(cls):
-        return ("novelai_cd", "novelai_tag", "novelai_on", "novelai_uc", "novelai_pure")
+        return ("novelai_cd", "novelai_tags", "novelai_on", "novelai_ntags", "novelai_pure", "novelai_revoke")
 
     def __getitem__(cls, item):
         return getattr(cls, item)
 
-    @validator("novelai_cd", "novelai_oncemax")
+    @validator("novelai_cd", "novelai_max")
     def non_negative(cls, v: int, field: ModelField):
         if v < 1:
             return field.default
@@ -53,45 +56,20 @@ class Config(BaseSettings):
     class Config:
         extra = "ignore"
 
-    def check_mode(cls):  # TODO 重写
-        mode = cls.novelai_mode
-        match mode:
-            case "novelai":
-                if cls.novelai_token:
-                    cls.set_novelai()
-                else:
-                    logger.error(f"使用novelai模式但未检测到novelai token")
-            case "naifu":
-                if cls.novelai_api_domain == "https://api.novelai.net/" or cls.novelai_site_domain == "https://novelai.net/":
-                    logger.error(f"请配置个人服务器api和site")
-            case "webui":
-                if cls.novelai_api_domain == "https://api.novelai.net/" or cls.novelai_site_domain == "https://novelai.net/":
-                    logger.error(f"请配置个人服务器api和site")
-            case _:
-                if cls.novelai_token:
-                    logger.error(f"请配置正确的运行模式，检测到token，自动切换至novelai模式")
-                    cls.set_novelai()
-                    cls.mode = "novelai"
-                else:
-                    logger.error(f"请配置正确的运行模式")
-
-    def set_novelai(cls):
-        cls.novelai_api_domain: str = "https://api.novelai.net/"
-        cls.novelai_site_domain: str = "https://novelai.net/"
-
     async def set_enable(cls, group_id, enable):
         # 设置分群启用
         await cls.__init_json()
         now = await cls.get_value(group_id, "on")
+        logger.debug(now)
         if now:
             if enable:
                 return f"aidraw已经处于启动状态"
             else:
-                if await cls.set_value(group_id, "on", "False"):
+                if await cls.set_value(group_id, "on", "false"):
                     return f"aidraw已关闭"
         else:
             if enable:
-                if await cls.set_value(group_id, "on", "True"):
+                if await cls.set_value(group_id, "on", "true"):
                     return f"aidraw开始运行"
             else:
                 return f"aidraw已经处于关闭状态"
@@ -105,20 +83,20 @@ class Config(BaseSettings):
 
     async def get_value(cls, group_id, arg: str):
         # 获取设置值
-        group_id = str(group_id)
+        group_id=str(group_id)
         arg_ = arg if arg.startswith("novelai_") else "novelai_" + arg
         if arg_ in cls.keys():
             await cls.__init_json()
             async with aiofiles.open(jsonpath, "r") as f:
                 jsonraw = await f.read()
                 configdict: dict = json.loads(jsonraw)
-                return configdict.get(group_id, {}).get(arg_) or dict(cls)[arg_]
+                return configdict.get(group_id, {}).get(arg_,dict(cls)[arg_])
         else:
             return None
 
     async def get_groupconfig(cls, group_id):
         # 获取当群所有设置值
-        group_id = str(group_id)
+        group_id=str(group_id)
         await cls.__init_json()
         async with aiofiles.open(jsonpath, "r") as f:
             jsonraw = await f.read()
@@ -126,7 +104,7 @@ class Config(BaseSettings):
             baseconfig = {}
             for i in cls.keys():
                 value = configdict.get(group_id, {}).get(
-                    i) or dict(cls)[i]
+                    i,dict(cls)[i])
                 baseconfig[i] = value
             logger.debug(baseconfig)
             return baseconfig

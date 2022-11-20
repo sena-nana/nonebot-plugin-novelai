@@ -2,8 +2,6 @@ from io import BytesIO
 from PIL import Image
 import re
 import aiohttp
-import os
-from pathlib import Path
 
 
 def is_contain_chinese(check_str: str):
@@ -55,9 +53,11 @@ async def sendtosuperuser(message):
         })
         await asyncio.sleep(5)
 
+
 async def png2jpg(raw: BytesIO):
     img_PIL = Image.open(raw)
     img_PIL.convert("RGB")
     image_new = BytesIO()
     img_PIL.save(image_new, format="JPEG", quality=95)
     return image_new
+

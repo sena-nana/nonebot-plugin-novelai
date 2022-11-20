@@ -3,8 +3,8 @@
 说明书：https://sena-nana.github.io/MutsukiDocs/
 
 环境需求：
-- Python>=3.10，低版本python请自行clone然后修改match部分代码
-- nonebot2>=b4，如果不符合版本安装时会强制升上去然后你的其他一大堆插件就会爆炸
+- Python>=3.7
+- nonebot2>=b4
 ## 依赖
 aiohttp,aiofiles
 ## 配置文件
@@ -25,6 +25,7 @@ aiohttp,aiofiles
 9. NOVELAI_BAN=list[int] 设置在哪些群禁用，默认为空，运行时可通过指令修改
 10. NOVELAI_H=bool 是否启用r18模式，默认关闭（开启后被风控或者封号不要发issue）
 10. NOVELAI_ONCEMAX=int 单次允许生成的最大数量
+10. NOVELAI_REVOKE=int 是否自动撤回
 
 ## 说明
 该插件允许在nonebot2前端软件中使用ai绘图，支持的后端为novalai官方，naifu和webui
@@ -32,13 +33,13 @@ aiohttp,aiofiles
 novelai模式需要token才能运行，所以你需要首先购买novelai的25刀套餐（25刀套餐支持无限生成）。其他套餐也支持，但是会扣费。
 ## 指令示例
 
-.aidraw -seed-square-cute,loli,kawaii,
-- 指令使用-来分割各个部分，如果你只输入词条可以不用加-
-- square为指定画幅，支持简写为s和S，其他画幅为portrait和landscape，同样支持简写，默认为portrait
+.aidraw loli,cute --ntags big breast --seed 114514
+- 指令使用shell解析输入的参数
+- square为指定画幅，支持简写为s，其他画幅为portrait和landscape，同样支持简写，默认为portrait
 - seed若省略则为自动生成
 - 词条使用英文，使用逗号（中英都行，代码里有转换）分割，中文会自动机翻为英文，不支持其他语种
-- 如果你不想用.aidraw，可以用 **绘画** 、 **咏唱** 、 **约稿** 或 **召唤** 代替。
-- 在消息中添加图片自动切换为以图生图模式
+- 如果你不想用.aidraw，可以用 **绘画** 、 **咏唱** 或 **召唤** 代替。
+- 在消息中添加图片或者回复带有图片的消息自动切换为以图生图模式
 
 .aidraw on/off
 - 启动/关闭本群的aidraw
@@ -60,15 +61,12 @@ novelai模式需要token才能运行，所以你需要首先购买novelai的25�
 - NAIFU
     - [ ] 支持文本生图
     - [ ] 支持以图生图
-    - [ ] 支持细化
 - WEBUI
     - [ ] 支持文本生图
     - [ ] 支持以图生图
-    - [ ] 支持细化
 - NOVELAI
     - [x] 支持文本生图
     - [x] 支持以图生图
-    - [ ] 支持细化
 - OTHERS
     - 群聊管理
         - [x] 支持分群设置
@@ -83,9 +81,8 @@ novelai模式需要token才能运行，所以你需要首先购买novelai的25�
         - [ ] 支持数据统计
     - 命令处理（需要重构）
         - [x] 支持文字生图画幅指定，种子指定
-        - [ ] 支持解除分辨率限制
-        - [ ] 支持输入排除词条
-        - [ ] 支持批量生成
+        - [x] 支持输入排除词条
+        - [x] 支持批量生成
     - 命令优化
         - [x] 内置优化词条模板并自动使用
         - [x] 支持管理员塞私货
