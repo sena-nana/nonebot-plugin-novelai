@@ -5,10 +5,10 @@ from nonebot.params import RegexGroup
 from nonebot import on_regex
 from nonebot.log import logger
 from .config import config
-on = on_regex(f"[(?:\.aidraw)|(?:绘画)][ ]*(on|off|开启|关闭)",
+on = on_regex(f"(?:\.aidraw|绘画|aidraw)[ ]*(on|off|开启|关闭)",
               priority=4, block=True)
 set = on_regex(
-    "(?:(?:.aidraw set)|(?:绘画设置))[ ]*([a-z]*)[ ]*(.*)", priority=4, block=True)
+    "(?:\.aidraw set|绘画设置|aidraw set)[ ]*([a-z]*)[ ]*(.*)", priority=4, block=True)
 
 
 @set.handle()

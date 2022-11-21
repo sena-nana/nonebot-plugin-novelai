@@ -1,37 +1,40 @@
 import time
-import random
 from collections import deque
 import aiohttp
+from aiohttp.client_exceptions import ClientConnectorError
 from argparse import Namespace
 from asyncio import get_running_loop
 from nonebot import get_bot, on_shell_command
 
 from nonebot.adapters.onebot.v11 import GroupMessageEvent, MessageSegment, Bot
 from nonebot.rule import ArgumentParser
+from nonebot.permission import SUPERUSER
 from nonebot.log import logger
 from nonebot.params import ShellCommandArgs
 
 from .config import config, nickname
 from .utils.data import lowQuality, basetag
-from .novelai import post, FIFO
+from .mode import post, FIFO
 from .extension.anlas import anlas_check, anlas_set
+from .extension.daylimit import DayLimit
 from .utils.save import save_img
 from .utils.prepocess import prepocess_tags
 from .version import version
 from .outofdate.explicit_api import check_safe_method
-
+from .utils import sendtosuperuser
 cd = {}
 gennerating = False
 limit_list = deque([])
 
 aidraw_parser = ArgumentParser()
-aidraw_parser.add_argument("tags", default=" ", nargs="*", help="标签")
-aidraw_parser.add_argument("-p", "--shape", "-形状",
-                           default="p", help="画布形状", dest="shape")
+aidraw_parser.add_argument("tags", nargs="*", help="标签")
+aidraw_parser.add_argument("-p", "--shape", "-形状", help="画布形状", dest="shape")
+aidraw_parser.add_argument("-w", "--width", "-宽", help="画布宽", dest="width")
+aidraw_parser.add_argument("-h", "--height", "-高", help="画布高", dest="height")
 aidraw_parser.add_argument("-c", "--scale", "-规模",
                            type=float, help="规模", dest="scale")
 aidraw_parser.add_argument(
-    "-s", "--seed", "-种子", default=random.randint(0,4294967295), type=int, help="种子", dest="seed")
+    "-s", "--seed", "-种子", type=int, help="种子", dest="seed")
 aidraw_parser.add_argument("-u", "--count", "-数量",
                            type=int, default=1, help="生成数量", dest="count")
 aidraw_parser.add_argument("-t", "--steps", "-步数",
@@ -47,7 +50,7 @@ aidraw_parser.add_argument("--nopre", "-不优化",
 
 aidraw = on_shell_command(
     ".aidraw",
-    aliases={"绘画", "咏唱", "召唤"},
+    aliases={"绘画", "咏唱", "召唤", "aidraw"},
     parser=aidraw_parser,
     priority=5
 )
@@ -62,10 +65,18 @@ async def aidraw_get(bot: Bot,
     group_id = str(event.group_id)
     # 判断是否禁用，若没禁用，进入处理流程
     if await config.get_value(group_id, "on"):
+        message = ""
         # 判断最大生成数量
-        if args.count>config.novelai_max:
-            await aidraw.send(f"批量生成数量过多，自动修改为{config.novelai_max}")
-            args.count=config.novelai_max
+        if args.count > config.novelai_max:
+            message = message+f",批量生成数量过多，自动修改为{config.novelai_max}"
+            args.count = config.novelai_max
+        # 判断次数限制
+        if config.novelai_daylimit and not await SUPERUSER(bot,event):
+            left = DayLimit.count(user_id, args.count)
+            if left == -1:
+                aidraw.finish(f"今天你的次数不够了哦")
+            else:
+                message = message + f"，今天你还能够生成{left}张"
         # 判断cd
         nowtime = time.time()
         deltatime = nowtime - cd.get(user_id, 0)
@@ -76,7 +87,7 @@ async def aidraw_get(bot: Bot,
             cd[user_id] = nowtime
 
         # 初始化参数
-        fifo = FIFO(user_id=user_id, group_id=group_id, args=args)
+        fifo = FIFO(user_id=user_id, group_id=group_id, **vars(args))
         error = await prepocess_tags(fifo.tags) or await prepocess_tags(fifo.ntags)
         if error:
             await aidraw.finish(error)
@@ -98,6 +109,7 @@ async def aidraw_get(bot: Bot,
                     logger.info(f"检测到图片，自动切换到以图生图，正在获取图片")
                     async with session.get(img_url) as resp:
                         fifo.add_image(await resp.read())
+                    message = f",识别到图片，自动切换至以图生图"+message
             else:
                 await aidraw.finish(f"以图生图功能已禁用")
         logger.debug(fifo)
@@ -106,18 +118,18 @@ async def aidraw_get(bot: Bot,
             anlascost = fifo.cost
             hasanlas = await anlas_check(fifo.user_id)
             if hasanlas >= anlascost:
-                await wait_fifo(fifo, anlascost, hasanlas - anlascost)
+                await wait_fifo(fifo, anlascost, hasanlas - anlascost, message=message)
             else:
                 await aidraw.finish(f"你的点数不足，你的剩余点数为{hasanlas}")
         else:
-            await wait_fifo(fifo)
+            await wait_fifo(fifo, message=message)
 
 
-async def wait_fifo(fifo, anlascost=None, anlas=None):
+async def wait_fifo(fifo, anlascost=None, anlas=None, message=""):
     # 创建队列
     list_len = get_wait_num()
-    has_wait = f"排队中，你的前面还有{list_len}人"
-    no_wait = "请稍等，图片生成中"
+    has_wait = f"排队中，你的前面还有{list_len}人"+message
+    no_wait = "请稍等，图片生成中"+message
     if anlas:
         has_wait += f"\n本次生成消耗点数{anlascost},你的剩余点数为{anlas}"
         no_wait += f"\n本次生成消耗点数{anlascost},你的剩余点数为{anlas}"
@@ -153,7 +165,7 @@ async def fifo_gennerate(fifo: FIFO = None):
             logger.exception("生成失败")
             message = f"生成失败，"
             for i in e.args:
-                message += i
+                message += str(i)
             await bot.send_group_msg(
                 message=message,
                 group_id=fifo.group_id
@@ -208,17 +220,19 @@ async def fifo_gennerate(fifo: FIFO = None):
 
 async def _run_gennerate(fifo: FIFO):
     # 处理单个请求
-    img_bytes = await post(fifo)
-    if isinstance(img_bytes, str):
-        raise RuntimeError(img_bytes)
-    message = MessageSegment.text(fifo.format())
-
+    try:
+        img_bytes = await post(fifo)
+    except ClientConnectorError:
+        await sendtosuperuser(f"远程服务器拒绝连接，请检查配置是否正确，服务器是否已经启动")
+        raise RuntimeError(f"远程服务器拒绝连接，请检查配置是否正确，服务器是否已经启动")
     # 若启用ai检定，取消注释下行代码，并将构造消息体部分注释
     # message = await check_safe_method(fifo, img_bytes, message)
     # 构造消息体并保存图片
     for i in img_bytes:
         await save_img(fifo, i, fifo.group_id)
         message += MessageSegment.image(i)
+    for i in fifo.format():
+        message = MessageSegment.text(i)
     # 扣除点数
     if fifo.cost > 0:
         await anlas_set(fifo.user_id, -fifo.cost)

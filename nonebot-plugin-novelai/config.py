@@ -13,28 +13,31 @@ nickname = list(get_driver().config.nickname)[0] if len(
 
 
 class Config(BaseSettings):
+    # 服务器设置
     novelai_token: str = ""  # 官网的token
+    novelai_mode: str = "novelai"
+    novelai_site: str = ""  # 你的服务器地址（包含端口），不包含http头，例:127.0.0.1:0000
+    # 后台设置
+    novelai_save: int = 1  # 是否保存图片至本地,0为不保存，1保存，2同时保存追踪信息
+    novelai_paid: int = 0  # 0为禁用付费模式，1为点数制，2为不限制
+    novelai_pure: bool = False  # 是否启用简洁返回模式（只返回图片，不返回tag等数据）
+    novelai_limit: bool = True  # 是否开启限速
+    novelai_daylimit: int = 0  # 每日次数限制，0为禁用
+    novelai_h: bool = False  # 是否允许H
+    novelai_max: int = 3  # 每次能够生成的最大数量
+    # 可运行更改的设置
     novelai_tags: str = ""  # 内置的tag
     novelai_ntags: str = ""  # 内置的反tag
     novelai_cd: int = 60  # 默认的cd
-    novelai_pure: bool = False  # 是否启用简洁返回模式（只返回图片，不返回tag等数据）
-    novelai_limit: bool = True  # 是否开启限速
-    novelai_save_pic: bool = True  # 是否保存图片至本地
-    novelai_save_detail: bool = False  # 是否保存图片信息至本地
-    novelai_api_domain: str = "https://api.novelai.net/"
-    novelai_site_domain: str = "https://novelai.net/"
-    novelai_mode: str = "novelai"
-    novelai_paid: int = 0  # 0为禁用付费模式，1为点数制，2为不限制
     novelai_on: bool = True  # 是否全局开启
-    novelai_h: bool = False  # 是否允许H
-    novelai_max: int = 3  # 每次能够生成的最大数量
     novelai_revoke: int = 0  # 是否自动撤回，该值不为0时，则为撤回时间
+    # 翻译API设置
     bing_key: str = None  # bing的翻译key
     deepl_key: str = None  # deepL的翻译key
 
     # 允许单群设置的设置
     def keys(cls):
-        return ("novelai_cd", "novelai_tags", "novelai_on", "novelai_ntags", "novelai_pure", "novelai_revoke")
+        return ("novelai_cd", "novelai_tags", "novelai_on", "novelai_ntags", "novelai_revoke")
 
     def __getitem__(cls, item):
         return getattr(cls, item)
@@ -83,20 +86,20 @@ class Config(BaseSettings):
 
     async def get_value(cls, group_id, arg: str):
         # 获取设置值
-        group_id=str(group_id)
+        group_id = str(group_id)
         arg_ = arg if arg.startswith("novelai_") else "novelai_" + arg
         if arg_ in cls.keys():
             await cls.__init_json()
             async with aiofiles.open(jsonpath, "r") as f:
                 jsonraw = await f.read()
                 configdict: dict = json.loads(jsonraw)
-                return configdict.get(group_id, {}).get(arg_,dict(cls)[arg_])
+                return configdict.get(group_id, {}).get(arg_, dict(cls)[arg_])
         else:
             return None
 
     async def get_groupconfig(cls, group_id):
         # 获取当群所有设置值
-        group_id=str(group_id)
+        group_id = str(group_id)
         await cls.__init_json()
         async with aiofiles.open(jsonpath, "r") as f:
             jsonraw = await f.read()
@@ -104,7 +107,7 @@ class Config(BaseSettings):
             baseconfig = {}
             for i in cls.keys():
                 value = configdict.get(group_id, {}).get(
-                    i,dict(cls)[i])
+                    i, dict(cls)[i])
                 baseconfig[i] = value
             logger.debug(baseconfig)
             return baseconfig
