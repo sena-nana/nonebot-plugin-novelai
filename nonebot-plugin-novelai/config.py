@@ -25,6 +25,7 @@ class Config(BaseSettings):
     novelai_daylimit: int = 0  # 每日次数限制，0为禁用
     novelai_h: bool = False  # 是否允许H
     novelai_max: int = 3  # 每次能够生成的最大数量
+    novelai_size: int = 1024 # 允许生成的图片最大分辨率，对应(值)^2.默认为1024（即1024*1024）。如果服务器比较寄，建议改成640（640*640）或者根据能够承受的情况修改。naifu和novelai会分别限制最大长宽为1024
     # 可运行更改的设置
     novelai_tags: str = ""  # 内置的tag
     novelai_ntags: str = ""  # 内置的反tag

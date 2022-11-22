@@ -1,4 +1,4 @@
-from ..config import config
+from ...config import config
 from ..base.fifo import FIFO_BASE
 
 class FIFO(FIFO_BASE):

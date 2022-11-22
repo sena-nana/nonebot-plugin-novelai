@@ -1,4 +1,4 @@
-from ..config import config
+from ...config import config
 from .fifo import FIFO
 from ..base.post import post_base
 

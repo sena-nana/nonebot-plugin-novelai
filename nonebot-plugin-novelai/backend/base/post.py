@@ -4,7 +4,7 @@ from io import BytesIO
 import aiohttp
 from nonebot.log import logger
 from .fifo import FIFO_BASE
-from ..utils import png2jpg
+from ...utils import png2jpg
 
 async def post_base(fifo: FIFO_BASE, header, post_api):
     # 请求交互

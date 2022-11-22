@@ -1,4 +1,4 @@
-from .config import config
+from ..config import config
 
 if config.novelai_mode=="novelai":
     from .novelai.post import post,FIFO

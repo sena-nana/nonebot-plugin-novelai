@@ -1,7 +1,7 @@
 import time
 from collections import deque
 import aiohttp
-from aiohttp.client_exceptions import ClientConnectorError
+from aiohttp.client_exceptions import ClientConnectorError, ClientOSError
 from argparse import Namespace
 from asyncio import get_running_loop
 from nonebot import get_bot, on_shell_command
@@ -14,7 +14,7 @@ from nonebot.params import ShellCommandArgs
 
 from .config import config, nickname
 from .utils.data import lowQuality, basetag
-from .mode import post, FIFO
+from .backend import post, FIFO
 from .extension.anlas import anlas_check, anlas_set
 from .extension.daylimit import DayLimit
 from .utils.save import save_img
@@ -29,8 +29,10 @@ limit_list = deque([])
 aidraw_parser = ArgumentParser()
 aidraw_parser.add_argument("tags", nargs="*", help="标签")
 aidraw_parser.add_argument("-p", "--shape", "-形状", help="画布形状", dest="shape")
-aidraw_parser.add_argument("-w", "--width", "-宽", help="画布宽", dest="width")
-aidraw_parser.add_argument("-h", "--height", "-高", help="画布高", dest="height")
+aidraw_parser.add_argument("-w", "--width", "-宽",
+                           type=int, help="画布宽", dest="width")
+aidraw_parser.add_argument("-e", "--height", "-高",
+                           type=int, help="画布高", dest="height")
 aidraw_parser.add_argument("-c", "--scale", "-规模",
                            type=float, help="规模", dest="scale")
 aidraw_parser.add_argument(
@@ -71,7 +73,7 @@ async def aidraw_get(bot: Bot,
             message = message+f",批量生成数量过多，自动修改为{config.novelai_max}"
             args.count = config.novelai_max
         # 判断次数限制
-        if config.novelai_daylimit and not await SUPERUSER(bot,event):
+        if config.novelai_daylimit and not await SUPERUSER(bot, event):
             left = DayLimit.count(user_id, args.count)
             if left == -1:
                 aidraw.finish(f"今天你的次数不够了哦")
@@ -225,14 +227,18 @@ async def _run_gennerate(fifo: FIFO):
     except ClientConnectorError:
         await sendtosuperuser(f"远程服务器拒绝连接，请检查配置是否正确，服务器是否已经启动")
         raise RuntimeError(f"远程服务器拒绝连接，请检查配置是否正确，服务器是否已经启动")
+    except ClientOSError:
+        await sendtosuperuser(f"远程服务器崩掉了欸……")
+        raise RuntimeError(f"服务器崩掉了欸……请等待主人修复吧")
     # 若启用ai检定，取消注释下行代码，并将构造消息体部分注释
     # message = await check_safe_method(fifo, img_bytes, message)
     # 构造消息体并保存图片
+    message = f"{config.novelai_mode}绘画完成~"
     for i in img_bytes:
         await save_img(fifo, i, fifo.group_id)
         message += MessageSegment.image(i)
     for i in fifo.format():
-        message = MessageSegment.text(i)
+        message += MessageSegment.text(i)
     # 扣除点数
     if fifo.cost > 0:
         await anlas_set(fifo.user_id, -fifo.cost)

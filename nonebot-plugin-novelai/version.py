@@ -19,7 +19,7 @@ class Version():
         try:
             self.version = version(self.package)
         except:
-            self.version = "0.5.1"
+            self.version = "0.5.2"
 
     async def check_update(self):
         """检查更新，并推送"""

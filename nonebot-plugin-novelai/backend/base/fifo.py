@@ -3,8 +3,8 @@ from io import BytesIO
 import time
 from PIL import Image
 from nonebot import get_driver
-from ..utils.data import shapemap
-from ..config import config
+from ...utils.data import shapemap
+from ...config import config
 import random
 
 
@@ -41,7 +41,7 @@ class FIFO_BASE():
         self.img2img: bool = False
         self.image: str = None
         if width and height:
-            self.shape_set(width,height)
+            self.shape_set(width, height)
         else:
             self.width, self.height = shapemap.get(shape or "p")
         # 数值合法检查
@@ -84,11 +84,20 @@ class FIFO_BASE():
         self.img2img = True
         self.update_cost()
 
-    def shape_set(self, width, height):
-        base = round(min(width,height)/64)
-        if base>16:
-            base=16
-        if width >= height:
+    def shape_set(self, width:int, height:int):
+        if width*height > pow(config.novelai_size, 2):
+            if width<=height:
+                ratio=height/width
+                width:float=config.novelai_size/pow(ratio,0.5)
+                height:float=width*ratio
+            else:
+                ratio=width/height
+                height:float=config.novelai_size/pow(ratio,0.5)
+                width:float=height*ratio
+        base = round(max(width, height)/64)
+        if base > 16:
+            base = 16
+        if width <= height:
             self.width = round(width / height * base) * 64
             self.height = 64*base
         else:
@@ -100,21 +109,22 @@ class FIFO_BASE():
 
     def keys(self):
         return (
-            "seed","scale", "strength", "noise", "sampler", "model", "steps", "width", "height", "img2img")
+            "seed", "scale", "strength", "noise", "sampler", "model", "steps", "width", "height", "img2img")
 
     def __getitem__(self, item):
         return getattr(self, item)
 
     def format(self):
         dict_self = dict(self)
-        list=[]
+        list = []
         str = ""
         for i, v in dict_self.items():
             str += f"{i}={v}\n"
         list.append(str)
-        list.append(f"tags={dict_self['tags']}\n")
-        list.append(f"ntags={dict_self['ntags']}")
+        list.append(f"tags={self.tags}\n")
+        list.append(f"ntags={self.ntags}")
         return list
+
     def __repr__(self):
         return f"time={self.time}\nuser_id={self.user_id}\ngroup_id={self.group_id}\ncost={self.cost}\ncount={self.count}\n"+"".join(self.format())
 
