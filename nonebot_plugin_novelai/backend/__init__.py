@@ -1,9 +1,9 @@
 from ..config import config
 
 if config.novelai_mode=="novelai":
-    from .novelai.post import post,FIFO
+    from .novelai import AIDRAW
 elif config.novelai_mode=="naifu":
-    from .naifu.post import post,FIFO
+    from .naifu import AIDRAW
 elif config.novelai_mode=="sd":
     pass
 else:

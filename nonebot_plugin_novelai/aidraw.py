@@ -1,4 +1,6 @@
 import time
+import re
+
 from collections import deque
 import aiohttp
 from aiohttp.client_exceptions import ClientConnectorError, ClientOSError
@@ -13,8 +15,8 @@ from nonebot.log import logger
 from nonebot.params import ShellCommandArgs
 
 from .config import config, nickname
-from .utils.data import lowQuality, basetag
-from .backend import post, FIFO
+from .utils.data import lowQuality, basetag, htags
+from .backend import AIDRAW
 from .extension.anlas import anlas_check, anlas_set
 from .extension.daylimit import DayLimit
 from .utils.save import save_img
@@ -28,55 +30,49 @@ limit_list = deque([])
 
 aidraw_parser = ArgumentParser()
 aidraw_parser.add_argument("tags", nargs="*", help="标签")
-aidraw_parser.add_argument("-p", "--shape", "-形状", help="画布形状", dest="shape")
-aidraw_parser.add_argument("-w", "--width", "-宽",
-                           type=int, help="画布宽", dest="width")
-aidraw_parser.add_argument("-e", "--height", "-高",
-                           type=int, help="画布高", dest="height")
-aidraw_parser.add_argument("-c", "--scale", "-规模",
-                           type=float, help="规模", dest="scale")
+aidraw_parser.add_argument("-r", "--resolution", "-形状",
+                           help="画布形状/分辨率", dest="shape")
+aidraw_parser.add_argument("-c", "--scale", "-服从",
+                           type=float, help="对输入的服从度", dest="scale")
 aidraw_parser.add_argument(
     "-s", "--seed", "-种子", type=int, help="种子", dest="seed")
-aidraw_parser.add_argument("-u", "--count", "-数量",
-                           type=int, default=1, help="生成数量", dest="count")
+aidraw_parser.add_argument("-b", "--batch", "-数量",
+                           type=int, default=1, help="生成数量", dest="batch")
 aidraw_parser.add_argument("-t", "--steps", "-步数",
                            type=int, help="步数", dest="steps")
-aidraw_parser.add_argument("-n", "--ntags", "-排除",
+aidraw_parser.add_argument("-u", "--ntags", "-排除",
                            default=" ", nargs="*", help="负面标签", dest="ntags")
-aidraw_parser.add_argument("-r", "--strength", "-强度",
+aidraw_parser.add_argument("-e", "--strength", "-强度",
                            type=float, help="修改强度", dest="strength")
-aidraw_parser.add_argument("-o", "--noise", "-噪声",
+aidraw_parser.add_argument("-n", "--noise", "-噪声",
                            type=float, help="修改噪声", dest="noise")
-aidraw_parser.add_argument("--nopre", "-不优化",
-                           action='store_true', help="不使用内置优化参数", dest="nopre")
+aidraw_parser.add_argument("-o", "--override", "-不优化",
+                           action='store_true', help="不使用内置优化参数", dest="override")
 
 aidraw = on_shell_command(
     ".aidraw",
-    aliases={"绘画", "咏唱", "召唤", "aidraw"},
+    aliases={"绘画", "咏唱", "召唤", "约稿", "aidraw"},
     parser=aidraw_parser,
     priority=5
 )
 
 
 @aidraw.handle()
-async def aidraw_get(bot: Bot,
-                     event: GroupMessageEvent,
-                     args: Namespace = ShellCommandArgs()
-                     ):
+async def aidraw_get(bot: Bot, event: GroupMessageEvent, args: Namespace = ShellCommandArgs()):
     user_id = str(event.user_id)
     group_id = str(event.group_id)
     # 判断是否禁用，若没禁用，进入处理流程
     if await config.get_value(group_id, "on"):
         message = ""
         # 判断最大生成数量
-        if args.count > config.novelai_max:
+        if args.batch > config.novelai_max:
             message = message+f",批量生成数量过多，自动修改为{config.novelai_max}"
-            args.count = config.novelai_max
+            args.batch = config.novelai_max
         # 判断次数限制
         if config.novelai_daylimit and not await SUPERUSER(bot, event):
-            left = DayLimit.count(user_id, args.count)
+            left = DayLimit.count(user_id, args.batch)
             if left == -1:
-                aidraw.finish(f"今天你的次数不够了哦")
+                await aidraw.finish(f"今天你的次数不够了哦")
             else:
                 message = message + f"，今天你还能够生成{left}张"
         # 判断cd
@@ -87,13 +83,16 @@ async def aidraw_get(bot: Bot,
             await aidraw.finish(f"你冲的太快啦，请休息一下吧，剩余CD为{cd_ - int(deltatime)}s")
         else:
             cd[user_id] = nowtime
-
         # 初始化参数
-        fifo = FIFO(user_id=user_id, group_id=group_id, **vars(args))
-        error = await prepocess_tags(fifo.tags) or await prepocess_tags(fifo.ntags)
-        if error:
-            await aidraw.finish(error)
-        if not args.nopre:
+        args.tags = await prepocess_tags(args.tags)
+        args.ntags = await prepocess_tags(args.ntags)
+        fifo = AIDRAW(user_id=user_id, group_id=group_id, **vars(args))
+        # 检测是否有18+词条
+        if not config.novelai_h:
+            pattern = re.compile(f"(\s|,|^)({htags})(\s|,|$)")
+            if (re.search(pattern, fifo.tags) is not None):
+                aidraw.finish(f"H是不行的!")
+        if not args.override:
             fifo.tags = basetag + await config.get_value(group_id, "tags") + "," + fifo.tags
             fifo.ntags = lowQuality + fifo.ntags
 
@@ -111,7 +110,7 @@ async def aidraw_get(bot: Bot,
                     logger.info(f"检测到图片，自动切换到以图生图，正在获取图片")
                     async with session.get(img_url) as resp:
                         fifo.add_image(await resp.read())
-                    message = f",识别到图片，自动切换至以图生图"+message
+                    message = f"，已切换至以图生图"+message
             else:
                 await aidraw.finish(f"以图生图功能已禁用")
         logger.debug(fifo)
@@ -152,12 +151,12 @@ def get_wait_num():
     return list_len
 
 
-async def fifo_gennerate(fifo: FIFO = None):
+async def fifo_gennerate(fifo: AIDRAW = None):
     # 队列处理
     global gennerating
     bot = get_bot()
 
-    async def generate(fifo: FIFO):
+    async def generate(fifo: AIDRAW):
         # 开始生成
         logger.info(
             f"队列剩余{get_wait_num()}人 | 开始生成：{fifo}")
@@ -210,20 +209,17 @@ async def fifo_gennerate(fifo: FIFO = None):
 
         while len(limit_list) > 0:
             fifo = limit_list.popleft()
-            try:
-                await generate(fifo)
-            except:
-                logger.exception("生成中断")
+            await generate(fifo)
 
         gennerating = False
         logger.info("队列结束")
         await version.check_update()
 
 
-async def _run_gennerate(fifo: FIFO):
+async def _run_gennerate(fifo: AIDRAW):
     # 处理单个请求
     try:
-        img_bytes = await post(fifo)
+        await fifo.post()
     except ClientConnectorError:
         await sendtosuperuser(f"远程服务器拒绝连接，请检查配置是否正确，服务器是否已经启动")
         raise RuntimeError(f"远程服务器拒绝连接，请检查配置是否正确，服务器是否已经启动")
@@ -234,7 +230,7 @@ async def _run_gennerate(fifo: FIFO):
     # message = await check_safe_method(fifo, img_bytes, message)
     # 构造消息体并保存图片
     message = f"{config.novelai_mode}绘画完成~"
-    for i in img_bytes:
+    for i in fifo.result:
         await save_img(fifo, i, fifo.group_id)
         message += MessageSegment.image(i)
     for i in fifo.format():

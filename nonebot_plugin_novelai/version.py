@@ -4,8 +4,6 @@ from importlib.metadata import version
 from nonebot.log import logger
 
 from .utils import check_last_version, sendtosuperuser, compare_version
-
-
 class Version():
     version: str  # 当前版本
     lastcheck: float = 0  # 上次检查时间

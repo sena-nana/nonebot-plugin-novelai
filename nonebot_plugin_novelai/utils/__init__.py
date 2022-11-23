@@ -3,23 +3,6 @@ from PIL import Image
 import re
 import aiohttp
 
-
-def is_contain_chinese(check_str: str):
-    # 检查字符串是否包含汉字
-    for ch in check_str:
-        if u'\u4e00' <= ch <= u'\u9fff':
-            return True
-    return False
-
-
-def file_name_check(input: str):
-    # 检查文件名是否包含奇怪字符
-    errorcode = ["?", "<", ">", "\\", "/", "*", "|", ":"]
-    for i in errorcode:
-        input.replace(i, "")
-    return input
-
-
 async def check_last_version(package: str):
     # 检查包的最新版本
     async with aiohttp.ClientSession() as session:
