@@ -2,4 +2,4 @@
 User-agent:*
 Disallow:
 
-Sitemap: https://sena-nana.github.io/MutsukiDocs/nonebot-plugin-novelai/sitemap.xml
+Sitemap: https://sena-nana.github.io/MutsukiDocs/sitemap.xml
