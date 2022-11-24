@@ -14,7 +14,7 @@ from nonebot.permission import SUPERUSER
 from nonebot.log import logger
 from nonebot.params import ShellCommandArgs
 
-from .config import config, nickname
+from .config import config
 from .utils.data import lowQuality, basetag, htags
 from .backend import AIDRAW
 from .extension.anlas import anlas_check, anlas_set
@@ -78,7 +78,7 @@ async def aidraw_get(bot: Bot, event: GroupMessageEvent, args: Namespace = Shell
         nowtime = time.time()
         deltatime = nowtime - cd.get(user_id, 0)
         cd_ = int(await config.get_value(group_id, "cd"))
-        if (deltatime) < cd_:
+        if deltatime < cd_:
             await aidraw.finish(f"你冲的太快啦，请休息一下吧，剩余CD为{cd_ - int(deltatime)}s")
         else:
             cd[user_id] = nowtime
@@ -90,7 +90,7 @@ async def aidraw_get(bot: Bot, event: GroupMessageEvent, args: Namespace = Shell
         if not config.novelai_h:
             pattern = re.compile(f"(\s|,|^)({htags})(\s|,|$)")
             if (re.search(pattern, fifo.tags) is not None):
-                aidraw.finish(f"H是不行的!")
+                await aidraw.finish(f"H是不行的!")
         if not args.override:
             fifo.tags = basetag + await config.get_value(group_id, "tags") + "," + fifo.tags
             fifo.ntags = lowQuality + fifo.ntags
@@ -156,12 +156,10 @@ async def fifo_gennerate(fifo: AIDRAW = None):
     bot = get_bot()
 
     async def generate(fifo: AIDRAW):
-        id = bot.self_id
-        if config.novelai_antireport:
-            resp = await bot.get_group_member_info(group_id=fifo.group_id, user_id=fifo.user_id)
-            logger.debug(resp)
-            nickname = resp["card"] or resp["nickname"]
-            id = fifo.user_id
+        id = fifo.user_id if config.novelai_antireport else bot.self_id
+        resp = await bot.get_group_member_info(group_id=fifo.group_id, user_id=fifo.user_id)
+        nickname = resp["card"] or resp["nickname"]
+
         # 开始生成
         logger.info(
             f"队列剩余{wait_len()}人 | 开始生成：{fifo}")
@@ -214,7 +212,10 @@ async def fifo_gennerate(fifo: AIDRAW = None):
 
         while len(wait_list) > 0:
             fifo = wait_list.popleft()
-            await generate(fifo)
+            try:
+                await generate(fifo)
+            except:
+                pass
 
         gennerating = False
         logger.info("队列结束")

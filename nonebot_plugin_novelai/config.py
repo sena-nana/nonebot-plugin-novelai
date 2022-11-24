@@ -15,7 +15,7 @@ nickname = list(get_driver().config.nickname)[0] if len(
 class Config(BaseSettings):
     # 服务器设置
     novelai_token: str = ""  # 官网的token
-    # novelai_multi: dict = {"novelai":""}# 你的服务器地址（包含端口），不包含http头，例:127.0.0.1:6969
+    # novelai: dict = {"novelai":""}# 你的服务器地址（包含端口），不包含http头，例:127.0.0.1:6969
     novelai_mode: str = "novelai"
     novelai_site: str = ""
     # 后台设置

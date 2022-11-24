@@ -1,11 +1,11 @@
 from .base import AIDRAW_BASE
 from ..config import config
-from nonebot.log import logger
 
 
 class AIDRAW(AIDRAW_BASE):
     """队列中的单个请求"""
     sampler: str = "k_euler_ancestral"
+    max_resolution: int = 32
 
     async def fromresp(self, resp):
         img: dict = await resp.json()

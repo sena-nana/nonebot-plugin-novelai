@@ -14,6 +14,7 @@ from ..utils import png2jpg
 class AIDRAW_BASE():
     model: str = ""
     sampler: str = "k_euler_ancestral"
+    max_resolution: int = 16
 
     def __init__(self,
                  user_id: str,
@@ -76,15 +77,19 @@ class AIDRAW_BASE():
         if config.novelai_paid == 1:
             anlas = 0
             if (self.width * self.height > 409600) or self.image or self.batch > 1:
-                anlas += round(self.width * self.height *
-                               self.strength * self.batch * self.steps / 2293750)
+                anlas = round(self.width * self.height *
+                              self.strength * self.batch * self.steps / 2293750)
+                if anlas < 2:
+                    anlas = 2
             if self.user_id in get_driver().config.superusers:
                 self.cost = 0
             else:
                 self.cost = anlas
         elif config.novelai_paid == 2:
-            anlas += round(self.width * self.height *
-                           self.strength * self.batch * self.steps / 2293750)
+            anlas = round(self.width * self.height *
+                          self.strength * self.batch * self.steps / 2293750)
+            if anlas < 2:
+                anlas = 2
             if self.user_id in get_driver().config.superusers:
                 self.cost = 0
             else:
@@ -115,8 +120,8 @@ class AIDRAW_BASE():
                 height: float = config.novelai_size/pow(ratio, 0.5)
                 width: float = height*ratio
         base = round(max(width, height)/64)
-        if base > 16:
-            base = 16
+        if base > self.max_resolution:
+            base = self.max_resolution
         if width <= height:
             self.width = round(width / height * base) * 64
             self.height = 64*base
@@ -124,6 +129,7 @@ class AIDRAW_BASE():
             self.height = round(height / width * base) * 64
             self.width = 64*base
 
+    # end def
     async def post_(self, header: dict, post_api: str, json: dict):
         # 请求交互
         async with aiohttp.ClientSession(headers=header) as session:
