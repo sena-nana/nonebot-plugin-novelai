@@ -1,32 +1,16 @@
 # 支持中文关键词的基于nonebot2的AI绘图插件
 插件讨论反馈群：687904502
-说明书：https://sena-nana.github.io/MutsukiDocs/
+说明书：https://nb.novelai.dev
+
+如果你是koishi框架的用户或者更熟悉Node.js，请出门左转[Novelai Bot](https://bot.novelai.dev/)
 
 环境需求：
 - Python>=3.8
 - nonebot2>=b4
 ## 依赖
 aiohttp,aiofiles
-## 配置文件
-如果你使用官方服务器，需要将以下信息写入env文件(目前必须填)
 
-1. NOVELAI_TOKEN="str"   你的Novelai token，需要f12抓取
-
-可选信息
-
-1. NOVELAI_TAG="str"   所有生成都会事先加上这些tag，用来塞私货或者精简指令
-2. NOVELAI_CD=int   单个用户的cd，默认为60s
-3. NOVELAI_LIMIT=bool   是否启用并行限制，启用的话，bot会将请求加入队列，在服务器返回之前的结果后再申请。可以防止请求过快，在不知道官方会不会封号的情况下有心理安慰作用。默认开启
-6. NOVELAI_SAVE=int  是否自动保存到本地，默认开启（1）
-7. NOVELAI_MODE=dict   设置插件运行模式，默认"novelai"，详细查看说明书（还没写）
-8. NOVELAI_PAID=int   是否启用已付费模式,默认为0（禁用），1为点数模式，2为严格点数模式，3为无限制模式
-9. NOVELAI_DAYLIMIT=int 是否启用每日次数限制，默认为0（禁用），值为次数
-9. NOVELAI_BAN=list[int] 设置在哪些群禁用，默认为空，运行时可通过指令修改
-10. NOVELAI_H=bool 是否启用r18模式，默认关闭（开启后被风控或者封号不要发issue）
-10. NOVELAI_ONCEMAX=int 单次允许生成的最大数量
-10. NOVELAI_REVOKE=int 是否自动撤回
-
-## 说明
+## 简要说明
 该插件允许在nonebot2前端软件中使用ai绘图，支持的后端为novalai官方，naifu和webui
 
 novelai模式需要token才能运行，所以你需要首先购买novelai的25刀套餐（25刀套餐支持无限生成）。其他套餐也支持，但是会扣费。
