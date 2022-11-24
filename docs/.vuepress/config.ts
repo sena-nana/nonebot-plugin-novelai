@@ -5,7 +5,6 @@ export default defineUserConfig({
     lang: "zh-CN",
     title: "nonebot-plugin-novelai",
     description: "基于Nonebot的novelai使用说明书",
-    base:"/nonebot-plugin-novelai/",
   theme,
   shouldPrefetch: false,
   plugins:[
