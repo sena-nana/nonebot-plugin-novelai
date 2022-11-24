@@ -15,8 +15,9 @@ nickname = list(get_driver().config.nickname)[0] if len(
 class Config(BaseSettings):
     # 服务器设置
     novelai_token: str = ""  # 官网的token
+    # novelai_multi: dict = {"novelai":""}# 你的服务器地址（包含端口），不包含http头，例:127.0.0.1:6969
     novelai_mode: str = "novelai"
-    novelai_site: str = ""  # 你的服务器地址（包含端口），不包含http头，例:127.0.0.1:0000
+    novelai_site: str = ""
     # 后台设置
     novelai_save: int = 1  # 是否保存图片至本地,0为不保存，1保存，2同时保存追踪信息
     novelai_paid: int = 0  # 0为禁用付费模式，1为点数制，2为不限制
@@ -24,8 +25,10 @@ class Config(BaseSettings):
     novelai_limit: bool = True  # 是否开启限速
     novelai_daylimit: int = 0  # 每日次数限制，0为禁用
     novelai_h: bool = False  # 是否允许H
+    novelai_antireport: bool = True  # 玄学选项。开启后，合并消息内发送者将会显示为调用指令的人而不是bot
     novelai_max: int = 3  # 每次能够生成的最大数量
-    novelai_size: int = 1024 # 允许生成的图片最大分辨率，对应(值)^2.默认为1024（即1024*1024）。如果服务器比较寄，建议改成640（640*640）或者根据能够承受的情况修改。naifu和novelai会分别限制最大长宽为1024
+    # 允许生成的图片最大分辨率，对应(值)^2.默认为1024（即1024*1024）。如果服务器比较寄，建议改成640（640*640）或者根据能够承受的情况修改。naifu和novelai会分别限制最大长宽为1024
+    novelai_size: int = 1024
     # 可运行更改的设置
     novelai_tags: str = ""  # 内置的tag
     novelai_ntags: str = ""  # 内置的反tag

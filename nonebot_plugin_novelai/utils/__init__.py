@@ -2,6 +2,8 @@ from io import BytesIO
 from PIL import Image
 import re
 import aiohttp
+import base64
+
 
 async def check_last_version(package: str):
     # 检查包的最新版本
@@ -37,10 +39,11 @@ async def sendtosuperuser(message):
         await asyncio.sleep(5)
 
 
-async def png2jpg(raw: BytesIO):
+async def png2jpg(raw: bytes):
+    raw:BytesIO = BytesIO(base64.b64decode(raw))
     img_PIL = Image.open(raw)
     img_PIL.convert("RGB")
     image_new = BytesIO()
     img_PIL.save(image_new, format="JPEG", quality=95)
+    image_new=image_new.getvalue()
     return image_new
-

@@ -22,11 +22,10 @@ from .extension.daylimit import DayLimit
 from .utils.save import save_img
 from .utils.prepocess import prepocess_tags
 from .version import version
-from .outofdate.explicit_api import check_safe_method
 from .utils import sendtosuperuser
 cd = {}
 gennerating = False
-limit_list = deque([])
+wait_list = deque([])
 
 aidraw_parser = ArgumentParser()
 aidraw_parser.add_argument("tags", nargs="*", help="标签")
@@ -128,7 +127,7 @@ async def aidraw_get(bot: Bot, event: GroupMessageEvent, args: Namespace = Shell
 
 async def wait_fifo(fifo, anlascost=None, anlas=None, message=""):
     # 创建队列
-    list_len = get_wait_num()
+    list_len = wait_len()
     has_wait = f"排队中，你的前面还有{list_len}人"+message
     no_wait = "请稍等，图片生成中"+message
     if anlas:
@@ -136,16 +135,16 @@ async def wait_fifo(fifo, anlascost=None, anlas=None, message=""):
         no_wait += f"\n本次生成消耗点数{anlascost},你的剩余点数为{anlas}"
     if config.novelai_limit:
         await aidraw.send(has_wait if list_len > 0 else no_wait)
-        limit_list.append(fifo)
+        wait_list.append(fifo)
         await fifo_gennerate()
     else:
         await aidraw.send(no_wait)
         await fifo_gennerate(fifo)
 
 
-def get_wait_num():
+def wait_len():
     # 获取剩余队列长度
-    list_len = len(limit_list)
+    list_len = len(wait_list)
     if gennerating:
         list_len += 1
     return list_len
@@ -157,9 +156,15 @@ async def fifo_gennerate(fifo: AIDRAW = None):
     bot = get_bot()
 
     async def generate(fifo: AIDRAW):
+        id = bot.self_id
+        if config.novelai_antireport:
+            resp = await bot.get_group_member_info(group_id=fifo.group_id, user_id=fifo.user_id)
+            logger.debug(resp)
+            nickname = resp["card"] or resp["nickname"]
+            id = fifo.user_id
         # 开始生成
         logger.info(
-            f"队列剩余{get_wait_num()}人 | 开始生成：{fifo}")
+            f"队列剩余{wait_len()}人 | 开始生成：{fifo}")
         try:
             im = await _run_gennerate(fifo)
         except Exception as e:
@@ -172,7 +177,7 @@ async def fifo_gennerate(fifo: AIDRAW = None):
                 group_id=fifo.group_id
             )
         else:
-            logger.info(f"队列剩余{get_wait_num()}人 | 生成完毕：{fifo}")
+            logger.info(f"队列剩余{wait_len()}人 | 生成完毕：{fifo}")
             if await config.get_value(fifo.group_id, "pure"):
                 message = MessageSegment.at(fifo.user_id)
                 for i in im["image"]:
@@ -185,7 +190,7 @@ async def fifo_gennerate(fifo: AIDRAW = None):
                 message = []
                 for i in im:
                     message.append(MessageSegment.node_custom(
-                        bot.self_id, nickname, i))
+                        id, nickname, i))
                 message_data = await bot.send_group_forward_msg(
                     messages=message,
                     group_id=fifo.group_id,
@@ -207,8 +212,8 @@ async def fifo_gennerate(fifo: AIDRAW = None):
         logger.info("队列开始")
         gennerating = True
 
-        while len(limit_list) > 0:
-            fifo = limit_list.popleft()
+        while len(wait_list) > 0:
+            fifo = wait_list.popleft()
             await generate(fifo)
 
         gennerating = False

@@ -13,7 +13,7 @@ from ..utils import png2jpg
 
 class AIDRAW_BASE():
     model: str = ""
-    sampler: str = ""
+    sampler: str = "k_euler_ancestral"
 
     def __init__(self,
                  user_id: str,
@@ -43,14 +43,21 @@ class AIDRAW_BASE():
         self.image: str = None
         self.width, self.height = self.extract_shape(shape)
         # 数值合法检查
-        if self.steps <= 0 or self.steps > 50 if config.novelai_paid else 28:
+        if self.steps <= 0 or self.steps > (50 if config.novelai_paid else 28):
             self.steps = 28
+        if self.strength < 0 or self.strength > 1:
+            self.strength = 0.7
+        if self.noise < 0 or self.noise > 1:
+            self.noise = 0.2
+        if self.scale <= 0 or self.scale > 30:
+            self.scale = 11
         # 多图时随机填充剩余seed
         for i in range(self.batch-1):
             self.seed.append(random.randint(0, 4294967295))
         # 计算cost
         self.update_cost()
-        self.result = []
+        self.error: int = 0
+        self.result: list = []
 
     def extract_shape(self, shape: str):
         if shape:
@@ -120,20 +127,22 @@ class AIDRAW_BASE():
     async def post_(self, header: dict, post_api: str, json: dict):
         # 请求交互
         async with aiohttp.ClientSession(headers=header) as session:
-            for i in range(self.batch):
-                # 向服务器发送请求
-                async with session.post(post_api, json=json) as resp:
-                    if resp.status not in [200, 201]:
-                        raise RuntimeError(f"与服务器沟通时发生{resp.status}错误")
-                    img = await resp.text()
-                    img = img.split("data:")[1]
-                    logger.debug(f"获取到返回图片，正在处理")
+            # 向服务器发送请求
+            async with session.post(post_api, json=json) as resp:
+                if resp.status not in [200, 201]:
+                    logger.error(await resp.text())
+                    raise RuntimeError(f"与服务器沟通时发生{resp.status}错误")
+                img = await self.fromresp(resp)
+                logger.debug(f"获取到返回图片，正在处理")
 
-                    # 将图片转化为jpg(BytesIO)
-                    image = BytesIO(base64.b64decode(img))
-                    image_new = await png2jpg(image)
+                # 将图片转化为jpg
+                image_new = await png2jpg(img)
         self.result.append(image_new)
         return image_new
+
+    async def fromresp(self, resp):
+        img: str = await resp.text()
+        return img.split("data:")[1]
 
     def post(self):
         pass

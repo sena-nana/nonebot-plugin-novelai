@@ -1,4 +1,3 @@
-from re import L
 import aiohttp
 from ..config import config
 from nonebot.log import logger
@@ -14,7 +13,7 @@ async def translate(text: str, to: str):
         return text
 
 
-async def translate_bing(text: str, to: str) -> str | None:
+async def translate_bing(text: str, to: str):
     """
     en,jp,zh_Hans
     """
@@ -44,7 +43,7 @@ async def translate_bing(text: str, to: str) -> str | None:
             return result
 
 
-async def translate_deepl(text: str, to: str) -> str | None:
+async def translate_deepl(text: str, to: str):
     """
     EN,JA,ZH
     """
@@ -62,14 +61,13 @@ async def translate_deepl(text: str, to: str) -> str | None:
             if resp.status != 200:
                 logger.error(f"DeepL翻译接口调用失败,错误代码{resp.status},{await resp.text()}")
                 return None
-            
             jsonresult = await resp.json()
             result=jsonresult["translations"][0]["text"]
             logger.debug(f"DeepL翻译启动，获取到{text},翻译后{result}")
             return result
 
 
-async def translate_youdao(input: str, type: str) -> str | None:
+async def translate_youdao(input: str, type: str):
     """
     默认auto
     ZH_CH2EN 中译英

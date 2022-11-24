@@ -2,15 +2,14 @@ from .base import AIDRAW_BASE
 from ..config import config
 class AIDRAW(AIDRAW_BASE):
     """队列中的单个请求"""
-    sampler: str = "k_euler_ancestral"
-
 
     async def post(self):
         header = {
             "content-type": "application/json",
             "user-agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/106.0.0.0 Safari/537.36",
         }
-        post_api="http://"+config.novelai_site + "/generate-stream"
+        site=config.novelai_site or "127.0.0.1:6969"
+        post_api="http://"+site + "/generate-stream"
         for i in range(self.batch):
             parameters = {
                 "prompt":self.tags,

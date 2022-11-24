@@ -17,9 +17,8 @@ aiohttp,aiofiles
 1. NOVELAI_TAG="str"   所有生成都会事先加上这些tag，用来塞私货或者精简指令
 2. NOVELAI_CD=int   单个用户的cd，默认为60s
 3. NOVELAI_LIMIT=bool   是否启用并行限制，启用的话，bot会将请求加入队列，在服务器返回之前的结果后再申请。可以防止请求过快，在不知道官方会不会封号的情况下有心理安慰作用。默认开启
-5. NOVELAI_SITE="str"  自定义后端时设置
 6. NOVELAI_SAVE=int  是否自动保存到本地，默认开启（1）
-7. NOVELAI_MODE="str"   设置插件运行模式，默认"novelai"，详细查看说明书（还没写）
+7. NOVELAI_MODE=dict   设置插件运行模式，默认"novelai"，详细查看说明书（还没写）
 8. NOVELAI_PAID=int   是否启用已付费模式,默认为0（禁用），1为点数模式，2为严格点数模式，3为无限制模式
 9. NOVELAI_DAYLIMIT=int 是否启用每日次数限制，默认为0（禁用），值为次数
 9. NOVELAI_BAN=list[int] 设置在哪些群禁用，默认为空，运行时可通过指令修改
@@ -62,8 +61,8 @@ novelai模式需要token才能运行，所以你需要首先购买novelai的25�
     - [x] 支持文本生图
     - [x] 支持以图生图
 - WEBUI
-    - [ ] 支持文本生图
-    - [ ] 支持以图生图
+    - [x] 支持文本生图
+    - [x] 支持以图生图
 - NOVELAI
     - [x] 支持文本生图
     - [x] 支持以图生图
@@ -91,5 +90,6 @@ novelai模式需要token才能运行，所以你需要首先购买novelai的25�
     - [x] 生成图片自动保存至data/novelai文件夹
     - [x] 支持开关禁止nsfw
     - [x] 更新提醒
+    - [ ] 支持i18n
     - [ ] 支持多台后端负载均衡
     - [ ] 说明书

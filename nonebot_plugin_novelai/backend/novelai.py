@@ -4,7 +4,6 @@ from .base import AIDRAW_BASE
 class AIDRAW(AIDRAW_BASE):
     """队列中的单个请求"""
     model: str = "nai-diffusion" if config.novelai_h else "safe-diffusion"
-    sampler: str = "k_euler_ancestral"
 
     async def post(self):
         # 获取请求体
