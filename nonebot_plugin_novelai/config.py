@@ -1,26 +1,36 @@
 import json
 from pathlib import Path
-
+#from .fifo import FIFO
 import aiofiles
-from nonebot import get_driver
+from nonebot import get_driver, on_command
+from nonebot.permission import SUPERUSER
 from nonebot.log import logger
 from pydantic import BaseSettings, validator
 from pydantic.fields import ModelField
-
+driver = get_driver()
 jsonpath = Path("data/novelai/config.json").resolve()
-nickname = list(get_driver().config.nickname)[0] if len(
-    get_driver().config.nickname) else "nonebot-plugin-novelai"
+nickname = list(driver.config.nickname)[0] if len(
+    driver.config.nickname) else "nonebot-plugin-novelai"
+
+
+
+async def load():
+    global config
+    config = Config(**get_driver().config.dict())
+    logger.info(f"加载config完成" + str(config))
+    #fifo = FIFO(config.novelai)
 
 
 class Config(BaseSettings):
     # 服务器设置
     novelai_token: str = ""  # 官网的token
-    # novelai: dict = {"novelai":""}# 你的服务器地址（包含端口），不包含http头，例:127.0.0.1:6969
+    novelai: dict = {"novelai": ""}  # 你的服务器地址（包含端口），不包含http头，例:127.0.0.1:6969
     novelai_mode: str = "novelai"
     novelai_site: str = ""
     # 后台设置
-    novelai_save: int = 1  # 是否保存图片至本地,0为不保存，1保存，2同时保存追踪信息
-    novelai_paid: int = 0  # 0为禁用付费模式，1为点数制，2为不限制
+    novelai_save: int = 1  # 是否保存图片至本地,0为不保存，1保存jpg(丢失图片chunk信息)，2保存图片原本png
+    novelai_debug: bool = False  # 是否保存追踪信息，这会在图片旁保存同名txt文件
+    novelai_paid: int = 0  # 0为禁用付费模式，1为点数制，2为严格点数制，3为不限制
     novelai_pure: bool = False  # 是否启用简洁返回模式（只返回图片，不返回tag等数据）
     novelai_limit: bool = True  # 是否开启限速
     novelai_daylimit: int = 0  # 每日次数限制，0为禁用
@@ -149,7 +159,5 @@ class Config(BaseSettings):
         else:
             logger.debug(f"不正确的赋值,{arg_},{value},{type(value)}")
             return False
-
-
 config = Config(**get_driver().config.dict())
 logger.info(f"加载config完成" + str(config))

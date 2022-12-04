@@ -1,11 +1,9 @@
 from ..config import config
 from .base import AIDRAW_BASE
-
 class AIDRAW(AIDRAW_BASE):
     """队列中的单个请求"""
-    model: str = "nai-diffusion" if config.novelai_h else "safe-diffusion"
 
-    async def post(self):
+    async def run(self):
         # 获取请求体
         header = {
             "authorization": "Bearer " + config.novelai_token,
@@ -22,7 +20,7 @@ class AIDRAW(AIDRAW_BASE):
                 "height": self.height,
                 "qualityToggle": False,
                 "scale": self.scale,
-                "sampler": self.sampler,
+                "sampler": "k_euler_ancestral",
                 "steps": self.steps,
                 "seed": self.seed[i],
                 "n_samples": 1,
@@ -37,8 +35,7 @@ class AIDRAW(AIDRAW_BASE):
                 })
             json= {
                 "input": self.tags,
-                "model": self.model,
+                "model": "nai-diffusion" if config.novelai_h else "safe-diffusion",
                 "parameters": parameters
             }
             await self.post_(header, post_api,json)
-        return self.result

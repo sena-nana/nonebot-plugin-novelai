@@ -11,8 +11,8 @@ class AIDRAW(AIDRAW_BASE):
         img: dict = await resp.json()
         return img["images"][0]
 
-    async def post(self):
-        site=config.novelai_site or "127.0.0.1:7860"
+    async def run(self):
+        site = config.novelai_site or "127.0.0.1:7860"
         header = {
             "content-type": "application/json",
             "user-agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/106.0.0.0 Safari/537.36",
@@ -27,6 +27,12 @@ class AIDRAW(AIDRAW_BASE):
                 "width": self.width,
                 "height": self.height,
                 "negative_prompt": self.ntags,
+                "white_background":True,
+                "override_settings":{
+                    "filter_nsfw":True if config.novelai_h else False,
+                    "CLIP_stop_at_last_layers":2,
+                    "sd_model_checkpoint":""
+                }
             }
             if self.img2img:
                 parameters.update({
@@ -34,4 +40,3 @@ class AIDRAW(AIDRAW_BASE):
                     "denoising_strength": self.strength,
                 })
             await self.post_(header, post_api, parameters)
-        return self.result

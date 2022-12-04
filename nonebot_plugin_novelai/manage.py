@@ -4,20 +4,28 @@ from nonebot.permission import SUPERUSER
 from nonebot.params import RegexGroup
 from nonebot import on_regex
 from nonebot.log import logger
-from .config import config
+from .config import config, load
 on = on_regex(f"(?:\.aidraw|绘画|aidraw)[ ]*(on|off|开启|关闭)",
               priority=4, block=True)
 set = on_regex(
     "(?:\.aidraw set|绘画设置|aidraw set)[ ]*([a-z]*)[ ]*(.*)", priority=4, block=True)
+reload_matcher = on_regex(
+    f"(?:\.aidraw|绘画|aidraw)[ ]*(reload|重启)", permission=SUPERUSER, priority=4, block=True)
+
+
+@reload_matcher.handle()
+async def reload():
+    await load()
+    reload_matcher.finish("nonebot-plugin-novelai设置重载完成，队列已经全部清空")
 
 
 @set.handle()
-async def set_(bot: Bot, event: GroupMessageEvent, args= RegexGroup()):
+async def set_(bot: Bot, event: GroupMessageEvent, args=RegexGroup()):
     if await GROUP_ADMIN(bot, event) or await GROUP_OWNER(bot, event) or await SUPERUSER(bot, event):
         if args[0] and args[1]:
             key, value = args
             await set.finish(f"设置群聊{key}为{value}完成" if await config.set_value(event.group_id, key,
-                                                                        value) else f"不正确的赋值")
+                                                                              value) else f"不正确的赋值")
         else:
             group_config = await config.get_groupconfig(event.group_id)
             message = "当前群的设置为\n"

@@ -1,6 +1,7 @@
 import base64
 from io import BytesIO
 import time
+import asyncio
 from PIL import Image
 from nonebot import get_driver
 from ..utils.data import shapemap
@@ -12,23 +13,54 @@ from ..utils import png2jpg
 
 
 class AIDRAW_BASE():
-    model: str = ""
-    sampler: str = "k_euler_ancestral"
     max_resolution: int = 16
+    sampler:str
 
     def __init__(self,
                  user_id: str,
                  group_id: str,
                  tags: str = "",
+                 ntags: str = "",
                  seed: int = None,
                  scale: int = None,
-                 strength: float = None,
                  steps: int = None,
                  batch: int = None,
+                 strength: float = None,
                  noise: float = None,
-                 ntags: str = "",
                  shape: str = "p",
-                 **kwargs):
+                 model: str = None,
+                 ** kwargs):
+        """
+        AI绘画的核心部分,将与服务器通信的过程包装起来,并方便扩展服务器类型
+
+        :user_id: 用户id,必须
+        :group_id: 群聊id,如果是私聊则应置为0,必须
+        :tags: 图像的标签
+        :ntags: 图像的反面标签
+        :seed: 生成的种子，不指定的情况下随机生成
+        :scale: 标签的参考度，值越高越贴近于标签,但可能产生过度锐化。范围为0-30,默认11
+        :steps: 训练步数。范围为1-50,默认28.以图生图时强制50
+        :batch: 同时生成数量
+        :strength: 以图生图时使用,变化的强度。范围为0-1,默认0.7
+        :noise: 以图生图时使用,变化的噪音,数值越大细节越多,但可能产生伪影,不建议超过strength。范围0-1,默认0.2
+        :shape: 图像的形状，支持"p""s""l"三种，同时支持以"x"分割宽高的指定分辨率。
+                该值会被设置限制，并不会严格遵守输入
+                类初始化后,该参数会被拆分为:width:和:height:
+        :model: 指定的模型，模型名称在配置文件中手动设置。不指定模型则按照负载均衡自动选择
+
+        AIDRAW还包含了以下几种内置的参数
+        :status: 记录了AIDRAW的状态,默认为0等待中(处理中)
+                非0的值为运行完成后的状态值,200和201为正常运行,其余值为产生错误
+        :result: 当正常运行完成后,该参数为一个包含了生成图片bytes信息的数组
+        :maxresolution: 一般不用管，用于限制不同服务器的最大分辨率
+                如果你的SD经过了魔改支持更大分辨率可以修改该值并重新设置宽高
+        :cost: 记录了本次生成需要花费多少点数，自动计算
+        :signal: asyncio.Event类,可以作为信号使用。仅占位，需要自行实现相关方法
+        """
+        self.status: int = 0
+        self.result: list = []
+        self.signal: asyncio.Event = None
+        self.model = model
         self.time = time.strftime("%Y-%m-%d %H:%M:%S")
         self.user_id: str = user_id
         self.tags: str = tags
@@ -57,10 +89,11 @@ class AIDRAW_BASE():
             self.seed.append(random.randint(0, 4294967295))
         # 计算cost
         self.update_cost()
-        self.error: int = 0
-        self.result: list = []
 
     def extract_shape(self, shape: str):
+        """
+        将shape拆分为width和height
+        """
         if shape:
             if "x" in shape:
                 width, height, *_ = shape.split("x")
@@ -74,6 +107,9 @@ class AIDRAW_BASE():
             return (512, 768)
 
     def update_cost(self):
+        """
+        更新cost
+        """
         if config.novelai_paid == 1:
             anlas = 0
             if (self.width * self.height > 409600) or self.image or self.batch > 1:
@@ -98,6 +134,10 @@ class AIDRAW_BASE():
             self.cost = 0
 
     def add_image(self, image: bytes):
+        """
+        向类中添加图片，将其转化为以图生图模式
+        也可用于修改类中已经存在的图片
+        """
         # 根据图片重写长宽
         tmpfile = BytesIO(image)
         image_ = Image.open(tmpfile)
@@ -109,6 +149,9 @@ class AIDRAW_BASE():
         self.update_cost()
 
     def shape_set(self, width: int, height: int):
+        """
+        设置宽高
+        """
         limit = 1024 if config.paid else 640
         if width*height > pow(min(config.novelai_size, limit), 2):
             if width <= height:
@@ -129,8 +172,13 @@ class AIDRAW_BASE():
             self.height = round(height / width * base) * 64
             self.width = 64*base
 
-    # end def
     async def post_(self, header: dict, post_api: str, json: dict):
+        """
+        向服务器发送请求的核心函数，不要直接调用，请使用post函数
+        :header: 请求头
+        :post_api: 请求地址
+        :json: 请求体
+        """
         # 请求交互
         async with aiohttp.ClientSession(headers=header) as session:
             # 向服务器发送请求
@@ -142,15 +190,24 @@ class AIDRAW_BASE():
                 logger.debug(f"获取到返回图片，正在处理")
 
                 # 将图片转化为jpg
-                image_new = await png2jpg(img)
+                if config.novelai_save == 1:
+                    image_new = await png2jpg(img)
+                else:
+                    image_new = base64.b64decode(img)
         self.result.append(image_new)
         return image_new
 
     async def fromresp(self, resp):
+        """
+        处理请求的返回内容，不要直接调用，请使用post函数
+        """
         img: str = await resp.text()
         return img.split("data:")[1]
 
-    def post(self):
+    def run(self):
+        """
+        运行核心函数，发送请求并处理
+        """
         pass
 
     def keys(self):

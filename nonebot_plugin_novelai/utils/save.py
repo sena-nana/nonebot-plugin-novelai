@@ -3,7 +3,7 @@ from pathlib import Path
 import hashlib
 import aiofiles
 path = Path("data/novelai/output").resolve()
-async def save_img(fifo, img_bytes: bytes, extra: str = "unknown"):
+async def save_img(request, img_bytes: bytes, extra: str = "unknown"):
     # 存储图片
     if config.novelai_save:
         path_ = path / extra
@@ -12,6 +12,6 @@ async def save_img(fifo, img_bytes: bytes, extra: str = "unknown"):
         file = (path_ / hash).resolve()
         async with aiofiles.open(str(file) + ".jpg", "wb") as f:
             await f.write(img_bytes)
-        if config.novelai_save==2:
+        if config.novelai_debug:
             async with aiofiles.open(str(file) + ".txt", "w") as f:
-                await f.write(repr(fifo))
+                await f.write(repr(request))

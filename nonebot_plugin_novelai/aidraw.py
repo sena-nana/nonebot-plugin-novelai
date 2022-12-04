@@ -13,7 +13,7 @@ from nonebot.rule import ArgumentParser
 from nonebot.permission import SUPERUSER
 from nonebot.log import logger
 from nonebot.params import ShellCommandArgs
-
+from nonebot.exception import ParserExit
 from .config import config
 from .utils.data import lowQuality, basetag, htags
 from .backend import AIDRAW
@@ -48,15 +48,17 @@ aidraw_parser.add_argument("-n", "--noise", "-噪声",
 aidraw_parser.add_argument("-o", "--override", "-不优化",
                            action='store_true', help="不使用内置优化参数", dest="override")
 
-aidraw = on_shell_command(
+aidraw_matcher = on_shell_command(
     ".aidraw",
     aliases={"绘画", "咏唱", "召唤", "约稿", "aidraw"},
     parser=aidraw_parser,
     priority=5
 )
+@aidraw_matcher.handle()
+async def aidraw_get(bot: Bot, event: GroupMessageEvent, args: ParserExit = ShellCommandArgs()):
+    aidraw_matcher.finish("命令解析出错了!请不要输入奇奇怪怪的字符哦~(例如引号)")
 
-
-@aidraw.handle()
+@aidraw_matcher.handle()
 async def aidraw_get(bot: Bot, event: GroupMessageEvent, args: Namespace = ShellCommandArgs()):
     user_id = str(event.user_id)
     group_id = str(event.group_id)
@@ -71,7 +73,7 @@ async def aidraw_get(bot: Bot, event: GroupMessageEvent, args: Namespace = Shell
         if config.novelai_daylimit and not await SUPERUSER(bot, event):
             left = DayLimit.count(user_id, args.batch)
             if left == -1:
-                await aidraw.finish(f"今天你的次数不够了哦")
+                await aidraw_matcher.finish(f"今天你的次数不够了哦")
             else:
                 message = message + f"，今天你还能够生成{left}张"
         # 判断cd
@@ -79,21 +81,21 @@ async def aidraw_get(bot: Bot, event: GroupMessageEvent, args: Namespace = Shell
         deltatime = nowtime - cd.get(user_id, 0)
         cd_ = int(await config.get_value(group_id, "cd"))
         if deltatime < cd_:
-            await aidraw.finish(f"你冲的太快啦，请休息一下吧，剩余CD为{cd_ - int(deltatime)}s")
+            await aidraw_matcher.finish(f"你冲的太快啦，请休息一下吧，剩余CD为{cd_ - int(deltatime)}s")
         else:
             cd[user_id] = nowtime
         # 初始化参数
         args.tags = await prepocess_tags(args.tags)
         args.ntags = await prepocess_tags(args.ntags)
-        fifo = AIDRAW(user_id=user_id, group_id=group_id, **vars(args))
+        aidraw = AIDRAW(user_id=user_id, group_id=group_id, **vars(args))
         # 检测是否有18+词条
         if not config.novelai_h:
             pattern = re.compile(f"(\s|,|^)({htags})(\s|,|$)")
-            if (re.search(pattern, fifo.tags) is not None):
-                await aidraw.finish(f"H是不行的!")
+            if (re.search(pattern, aidraw.tags) is not None):
+                await aidraw_matcher.finish(f"H是不行的!")
         if not args.override:
-            fifo.tags = basetag + await config.get_value(group_id, "tags") + "," + fifo.tags
-            fifo.ntags = lowQuality + fifo.ntags
+            aidraw.tags = basetag + await config.get_value(group_id, "tags") + "," + aidraw.tags
+            aidraw.ntags = lowQuality + aidraw.ntags
 
         # 以图生图预处理
         img_url = ""
@@ -108,24 +110,26 @@ async def aidraw_get(bot: Bot, event: GroupMessageEvent, args: Namespace = Shell
                 async with aiohttp.ClientSession() as session:
                     logger.info(f"检测到图片，自动切换到以图生图，正在获取图片")
                     async with session.get(img_url) as resp:
-                        fifo.add_image(await resp.read())
+                        aidraw.add_image(await resp.read())
                     message = f"，已切换至以图生图"+message
             else:
-                await aidraw.finish(f"以图生图功能已禁用")
-        logger.debug(fifo)
+                await aidraw_matcher.finish(f"以图生图功能已禁用")
+        logger.debug(aidraw)
         # 初始化队列
-        if fifo.cost > 0:
-            anlascost = fifo.cost
-            hasanlas = await anlas_check(fifo.user_id)
+        if aidraw.cost > 0:
+            anlascost = aidraw.cost
+            hasanlas = await anlas_check(aidraw.user_id)
             if hasanlas >= anlascost:
-                await wait_fifo(fifo, anlascost, hasanlas - anlascost, message=message)
+                await wait_fifo(aidraw, anlascost, hasanlas - anlascost, message=message)
             else:
-                await aidraw.finish(f"你的点数不足，你的剩余点数为{hasanlas}")
+                await aidraw_matcher.finish(f"你的点数不足，你的剩余点数为{hasanlas}")
         else:
-            await wait_fifo(fifo, message=message)
+            await wait_fifo(aidraw, message=message)
+    else:
+        aidraw_matcher.finish(f"novelai插件未开启")
 
 
-async def wait_fifo(fifo, anlascost=None, anlas=None, message=""):
+async def wait_fifo(aidraw, anlascost=None, anlas=None, message=""):
     # 创建队列
     list_len = wait_len()
     has_wait = f"排队中，你的前面还有{list_len}人"+message
@@ -134,12 +138,12 @@ async def wait_fifo(fifo, anlascost=None, anlas=None, message=""):
         has_wait += f"\n本次生成消耗点数{anlascost},你的剩余点数为{anlas}"
         no_wait += f"\n本次生成消耗点数{anlascost},你的剩余点数为{anlas}"
     if config.novelai_limit:
-        await aidraw.send(has_wait if list_len > 0 else no_wait)
-        wait_list.append(fifo)
+        await aidraw_matcher.send(has_wait if list_len > 0 else no_wait)
+        wait_list.append(aidraw)
         await fifo_gennerate()
     else:
-        await aidraw.send(no_wait)
-        await fifo_gennerate(fifo)
+        await aidraw_matcher.send(no_wait)
+        await fifo_gennerate(aidraw)
 
 
 def wait_len():
@@ -150,21 +154,21 @@ def wait_len():
     return list_len
 
 
-async def fifo_gennerate(fifo: AIDRAW = None):
+async def fifo_gennerate(aidraw: AIDRAW = None):
     # 队列处理
     global gennerating
     bot = get_bot()
 
-    async def generate(fifo: AIDRAW):
-        id = fifo.user_id if config.novelai_antireport else bot.self_id
-        resp = await bot.get_group_member_info(group_id=fifo.group_id, user_id=fifo.user_id)
+    async def generate(aidraw: AIDRAW):
+        id = aidraw.user_id if config.novelai_antireport else bot.self_id
+        resp = await bot.get_group_member_info(group_id=aidraw.group_id, user_id=aidraw.user_id)
         nickname = resp["card"] or resp["nickname"]
 
         # 开始生成
         logger.info(
-            f"队列剩余{wait_len()}人 | 开始生成：{fifo}")
+            f"队列剩余{wait_len()}人 | 开始生成：{aidraw}")
         try:
-            im = await _run_gennerate(fifo)
+            im = await _run_gennerate(aidraw)
         except Exception as e:
             logger.exception("生成失败")
             message = f"生成失败，"
@@ -172,17 +176,17 @@ async def fifo_gennerate(fifo: AIDRAW = None):
                 message += str(i)
             await bot.send_group_msg(
                 message=message,
-                group_id=fifo.group_id
+                group_id=aidraw.group_id
             )
         else:
-            logger.info(f"队列剩余{wait_len()}人 | 生成完毕：{fifo}")
-            if await config.get_value(fifo.group_id, "pure"):
-                message = MessageSegment.at(fifo.user_id)
+            logger.info(f"队列剩余{wait_len()}人 | 生成完毕：{aidraw}")
+            if await config.get_value(aidraw.group_id, "pure"):
+                message = MessageSegment.at(aidraw.user_id)
                 for i in im["image"]:
                     message += i
                 message_data = await bot.send_group_msg(
                     message=message,
-                    group_id=fifo.group_id,
+                    group_id=aidraw.group_id,
                 )
             else:
                 message = []
@@ -191,9 +195,9 @@ async def fifo_gennerate(fifo: AIDRAW = None):
                         id, nickname, i))
                 message_data = await bot.send_group_forward_msg(
                     messages=message,
-                    group_id=fifo.group_id,
+                    group_id=aidraw.group_id,
                 )
-            revoke = await config.get_value(fifo.group_id, "revoke")
+            revoke = await config.get_value(aidraw.group_id, "revoke")
             if revoke:
                 message_id = message_data["message_id"]
                 loop = get_running_loop()
@@ -203,17 +207,17 @@ async def fifo_gennerate(fifo: AIDRAW = None):
                         bot.delete_msg(message_id=message_id)),
                 )
 
-    if fifo:
-        await generate(fifo)
+    if aidraw:
+        await generate(aidraw)
 
     if not gennerating:
         logger.info("队列开始")
         gennerating = True
 
         while len(wait_list) > 0:
-            fifo = wait_list.popleft()
+            aidraw = wait_list.popleft()
             try:
-                await generate(fifo)
+                await generate(aidraw)
             except:
                 pass
 
@@ -222,10 +226,10 @@ async def fifo_gennerate(fifo: AIDRAW = None):
         await version.check_update()
 
 
-async def _run_gennerate(fifo: AIDRAW):
+async def _run_gennerate(aidraw: AIDRAW):
     # 处理单个请求
     try:
-        await fifo.post()
+        await aidraw.run()
     except ClientConnectorError:
         await sendtosuperuser(f"远程服务器拒绝连接，请检查配置是否正确，服务器是否已经启动")
         raise RuntimeError(f"远程服务器拒绝连接，请检查配置是否正确，服务器是否已经启动")
@@ -233,15 +237,15 @@ async def _run_gennerate(fifo: AIDRAW):
         await sendtosuperuser(f"远程服务器崩掉了欸……")
         raise RuntimeError(f"服务器崩掉了欸……请等待主人修复吧")
     # 若启用ai检定，取消注释下行代码，并将构造消息体部分注释
-    # message = await check_safe_method(fifo, img_bytes, message)
+    # message = await check_safe_method(aidraw, img_bytes, message)
     # 构造消息体并保存图片
     message = f"{config.novelai_mode}绘画完成~"
-    for i in fifo.result:
-        await save_img(fifo, i, fifo.group_id)
+    for i in aidraw.result:
+        await save_img(aidraw, i, aidraw.group_id)
         message += MessageSegment.image(i)
-    for i in fifo.format():
+    for i in aidraw.format():
         message += MessageSegment.text(i)
     # 扣除点数
-    if fifo.cost > 0:
-        await anlas_set(fifo.user_id, -fifo.cost)
+    if aidraw.cost > 0:
+        await anlas_set(aidraw.user_id, -aidraw.cost)
     return message

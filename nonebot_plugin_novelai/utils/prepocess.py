@@ -3,7 +3,7 @@ from ..extension.translation import translate
 
 
 async def prepocess_tags(tags: list[str]):
-    tags: str = "".join([i+" " for i in tags])
+    tags: str = "".join([i+" " for i in tags if isinstance(i,str)])
     # 处理奇奇怪怪的输入
     tags = re.sub("[\f\n\r\t\v?<>\\/*\|:]", "", tags)
     # 去除CQ码
