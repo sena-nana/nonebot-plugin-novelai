@@ -118,14 +118,14 @@ async def aidraw_get(bot: Bot, event: GroupMessageEvent, args: Namespace = Shell
             anlascost = fifo.cost
             hasanlas = await anlas_check(fifo.user_id)
             if hasanlas >= anlascost:
-                await wait_fifo(fifo, anlascost, hasanlas - anlascost, message=message)
+                await wait_fifo(fifo, anlascost, hasanlas - anlascost, message=message, bot=bot)
             else:
                 await aidraw.finish(f"你的点数不足，你的剩余点数为{hasanlas}")
         else:
-            await wait_fifo(fifo, message=message)
+            await wait_fifo(fifo, message=message, bot=bot)
 
 
-async def wait_fifo(fifo, anlascost=None, anlas=None, message=""):
+async def wait_fifo(fifo, anlascost=None, anlas=None, message="", bot=None):
     # 创建队列
     list_len = wait_len()
     has_wait = f"排队中，你的前面还有{list_len}人"+message
@@ -136,10 +136,10 @@ async def wait_fifo(fifo, anlascost=None, anlas=None, message=""):
     if config.novelai_limit:
         await aidraw.send(has_wait if list_len > 0 else no_wait)
         wait_list.append(fifo)
-        await fifo_gennerate()
+        await fifo_gennerate(bot=bot)
     else:
         await aidraw.send(no_wait)
-        await fifo_gennerate(fifo)
+        await fifo_gennerate(fifo, bot)
 
 
 def wait_len():
@@ -150,10 +150,11 @@ def wait_len():
     return list_len
 
 
-async def fifo_gennerate(fifo: AIDRAW = None):
+async def fifo_gennerate(fifo: AIDRAW = None, bot: Bot = None):
     # 队列处理
     global gennerating
-    bot = get_bot()
+    if not bot:
+        bot = get_bot()
 
     async def generate(fifo: AIDRAW):
         id = fifo.user_id if config.novelai_antireport else bot.self_id
