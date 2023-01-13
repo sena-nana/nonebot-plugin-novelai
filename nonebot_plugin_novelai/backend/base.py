@@ -1,35 +1,39 @@
-import base64
-from io import BytesIO
-import time
 import asyncio
-from PIL import Image
-from nonebot import get_driver
-from ..utils.data import shapemap
-from ..config import config
+import base64
 import random
+import time
+from io import BytesIO
+
 import aiohttp
+from nonebot import get_driver
 from nonebot.log import logger
+from PIL import Image
+
+from ..config import config
 from ..utils import png2jpg
+from ..utils.data import shapemap
 
 
-class AIDRAW_BASE():
+class AIDRAW_BASE:
     max_resolution: int = 16
-    sampler:str
+    sampler: str
 
-    def __init__(self,
-                 user_id: str,
-                 group_id: str,
-                 tags: str = "",
-                 ntags: str = "",
-                 seed: int = None,
-                 scale: int = None,
-                 steps: int = None,
-                 batch: int = None,
-                 strength: float = None,
-                 noise: float = None,
-                 shape: str = "p",
-                 model: str = None,
-                 ** kwargs):
+    def __init__(
+        self,
+        user_id: str,
+        group_id: str,
+        tags: str = "",
+        ntags: str = "",
+        seed: int = None,
+        scale: int = None,
+        steps: int = None,
+        batch: int = None,
+        strength: float = None,
+        noise: float = None,
+        shape: str = "p",
+        model: str = None,
+        **kwargs,
+    ):
         """
         AI绘画的核心部分,将与服务器通信的过程包装起来,并方便扩展服务器类型
 
@@ -85,7 +89,7 @@ class AIDRAW_BASE():
         if self.scale <= 0 or self.scale > 30:
             self.scale = 11
         # 多图时随机填充剩余seed
-        for i in range(self.batch-1):
+        for i in range(self.batch - 1):
             self.seed.append(random.randint(0, 4294967295))
         # 计算cost
         self.update_cost()
@@ -98,7 +102,7 @@ class AIDRAW_BASE():
             if "x" in shape:
                 width, height, *_ = shape.split("x")
                 if width.isdigit() and height.isdigit():
-                    return int(width), int(height)
+                    return self.shape_set(int(width), int(height))
                 else:
                     return shapemap.get(shape)
             else:
@@ -113,8 +117,14 @@ class AIDRAW_BASE():
         if config.novelai_paid == 1:
             anlas = 0
             if (self.width * self.height > 409600) or self.image or self.batch > 1:
-                anlas = round(self.width * self.height *
-                              self.strength * self.batch * self.steps / 2293750)
+                anlas = round(
+                    self.width
+                    * self.height
+                    * self.strength
+                    * self.batch
+                    * self.steps
+                    / 2293750
+                )
                 if anlas < 2:
                     anlas = 2
             if self.user_id in get_driver().config.superusers:
@@ -122,8 +132,14 @@ class AIDRAW_BASE():
             else:
                 self.cost = anlas
         elif config.novelai_paid == 2:
-            anlas = round(self.width * self.height *
-                          self.strength * self.batch * self.steps / 2293750)
+            anlas = round(
+                self.width
+                * self.height
+                * self.strength
+                * self.batch
+                * self.steps
+                / 2293750
+            )
             if anlas < 2:
                 anlas = 2
             if self.user_id in get_driver().config.superusers:
@@ -142,7 +158,7 @@ class AIDRAW_BASE():
         tmpfile = BytesIO(image)
         image_ = Image.open(tmpfile)
         width, height = image_.size
-        self.shape_set(width, height)
+        self.width, self.height = self.shape_set(width, height)
         self.image = str(base64.b64encode(image), "utf-8")
         self.steps = 50
         self.img2img = True
@@ -153,24 +169,22 @@ class AIDRAW_BASE():
         设置宽高
         """
         limit = 1024 if config.paid else 640
-        if width*height > pow(min(config.novelai_size, limit), 2):
+        if width * height > pow(min(config.novelai_size, limit), 2):
             if width <= height:
-                ratio = height/width
-                width: float = config.novelai_size/pow(ratio, 0.5)
-                height: float = width*ratio
+                ratio = height / width
+                width: float = config.novelai_size / pow(ratio, 0.5)
+                height: float = width * ratio
             else:
-                ratio = width/height
-                height: float = config.novelai_size/pow(ratio, 0.5)
-                width: float = height*ratio
-        base = round(max(width, height)/64)
+                ratio = width / height
+                height: float = config.novelai_size / pow(ratio, 0.5)
+                width: float = height * ratio
+        base = round(max(width, height) / 64)
         if base > self.max_resolution:
             base = self.max_resolution
         if width <= height:
-            self.width = round(width / height * base) * 64
-            self.height = 64*base
+            return (round(width / height * base) * 64, 64 * base)
         else:
-            self.height = round(height / width * base) * 64
-            self.width = 64*base
+            return (64 * base, round(height / width * base) * 64)
 
     async def post_(self, header: dict, post_api: str, json: dict):
         """
@@ -212,7 +226,17 @@ class AIDRAW_BASE():
 
     def keys(self):
         return (
-            "seed", "scale", "strength", "noise", "sampler", "model", "steps", "width", "height", "img2img")
+            "seed",
+            "scale",
+            "strength",
+            "noise",
+            "sampler",
+            "model",
+            "steps",
+            "width",
+            "height",
+            "img2img",
+        )
 
     def __getitem__(self, item):
         return getattr(self, item)
@@ -229,7 +253,10 @@ class AIDRAW_BASE():
         return list
 
     def __repr__(self):
-        return f"time={self.time}\nuser_id={self.user_id}\ngroup_id={self.group_id}\ncost={self.cost}\nbatch={self.batch}\n"+"".join(self.format())
+        return (
+            f"time={self.time}\nuser_id={self.user_id}\ngroup_id={self.group_id}\ncost={self.cost}\nbatch={self.batch}\n"
+            + "".join(self.format())
+        )
 
     def __str__(self):
         return self.__repr__().replace("\n", ";")

@@ -4,7 +4,7 @@ icon: home
 title: Nonebot-plugin-novelai
 heroImage:
 heroText: Nonebot-plugin-novelai
-tagline: 基于Nonebot的novelai使用说明书
+tagline: 一个Nonebot的AI绘画插件说明书
 actions:
   - text: 使用手册
     link: /main

@@ -1,8 +1,10 @@
-from .backend import AIDRAW
 import asyncio
 import time
 
-class MODEL():
+from .backend import AIDRAW
+
+
+class MODEL:
     type: str
     site: str
     model: str
@@ -41,14 +43,14 @@ class MODEL():
 
     def __len__(self):
         if self.generating:
-            return self.queue.qsize()+1
+            return self.queue.qsize() + 1
         else:
             return self.queue.qsize()
 
 
-class FIFO():
-    backends:dict[str,bool]
-    all_backends:dict[str,MODEL]
+class FIFO:
+    backends: dict[str, bool]
+    all_backends: dict[str, MODEL]
 
     def __init__(self, novelai_config):
         for i, v in novelai_config:
@@ -57,7 +59,7 @@ class FIFO():
         pass
 
     def min_backend(self, backend):
-        i,v=backend
+        i, v = backend
         if v:
             return len(self.all_backends[i])
         else:

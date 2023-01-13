@@ -1,9 +1,10 @@
 import re
+
 from ..extension.translation import translate
 
 
 async def prepocess_tags(tags: list[str]):
-    tags: str = "".join([i+" " for i in tags if isinstance(i,str)])
+    tags: str = "".join([i + " " for i in tags if isinstance(i, str)])
     # 处理奇奇怪怪的输入
     tags = re.sub("[\f\n\r\t\v?<>\\/*\|:]", "", tags)
     # 去除CQ码
@@ -13,7 +14,7 @@ async def prepocess_tags(tags: list[str]):
     tagzh = ""
     tags_ = ""
     for i in taglist:
-        if re.search('[\u4e00-\u9fa5]', tags):
+        if re.search("[\u4e00-\u9fa5]", tags):
             tagzh += f"{i},"
         else:
             tags_ += f"{i},"

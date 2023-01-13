@@ -1,7 +1,9 @@
+from nonebot.plugin import PluginMetadata
+
 from . import config, manage
 from .aidraw import AIDRAW
-from nonebot.plugin import PluginMetadata
 from .extension.deepdanbooru import deepdanbooru
+
 __plugin_meta__ = PluginMetadata(
     name="AI绘图",
     description="调用novelai进行二次元AI绘图",

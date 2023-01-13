@@ -1,7 +1,7 @@
 {
-  "name": "mutsukidocs",
-  "version": "1.0.0",
-  "description": "MutsukiBot的在线使用说明书",
+  "name": "nonebot-plugin-novelai",
+  "version": "0.6.0",
+  "description": "A project of vuepress-theme-hope",
   "license": "MIT",
   "type": "module",
   "scripts": {
@@ -10,10 +10,10 @@
     "docs:dev": "vuepress dev docs"
   },
   "devDependencies": {
-    "@vuepress/client": "2.0.0-beta.51",
-    "@vuepress/plugin-search": "2.0.0-beta.51",
-    "vue": "^3.2.29",
-    "vuepress": "2.0.0-beta.51",
-    "vuepress-theme-hope": "2.0.0-beta.103"
+    "@vuepress/client": "2.0.0-beta.60",
+    "vue": "^3.2.45",
+    "vuepress": "2.0.0-beta.60",
+    "vuepress-plugin-search-pro": "2.0.0-beta.152",
+    "vuepress-theme-hope": "2.0.0-beta.152"
   }
 }

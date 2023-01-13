@@ -1,65 +1,76 @@
-import time
 import re
-
-from collections import deque
-import aiohttp
-from aiohttp.client_exceptions import ClientConnectorError, ClientOSError
+import time
 from argparse import Namespace
 from asyncio import get_running_loop
-from nonebot import get_bot, on_shell_command
+from collections import deque
 
-from nonebot.adapters.onebot.v11 import GroupMessageEvent, MessageSegment, Bot
-from nonebot.rule import ArgumentParser
-from nonebot.permission import SUPERUSER
+import aiohttp
+from aiohttp.client_exceptions import ClientConnectorError, ClientOSError
+from nonebot import get_bot, on_shell_command
+from nonebot.adapters.onebot.v11 import Bot, GroupMessageEvent, MessageSegment
+from nonebot.exception import ParserExit
 from nonebot.log import logger
 from nonebot.params import ShellCommandArgs
-from nonebot.exception import ParserExit
-from .config import config
-from .utils.data import lowQuality, basetag, htags
+from nonebot.permission import SUPERUSER
+from nonebot.rule import ArgumentParser
+
 from .backend import AIDRAW
+from .config import config
 from .extension.anlas import anlas_check, anlas_set
 from .extension.daylimit import DayLimit
-from .utils.save import save_img
-from .utils.prepocess import prepocess_tags
-from .version import version
 from .utils import sendtosuperuser
+from .utils.data import basetag, htags, lowQuality
+from .utils.prepocess import prepocess_tags
+from .utils.save import save_img
+from .version import version
+
 cd = {}
 gennerating = False
 wait_list = deque([])
 
 aidraw_parser = ArgumentParser()
 aidraw_parser.add_argument("tags", nargs="*", help="标签")
-aidraw_parser.add_argument("-r", "--resolution", "-形状",
-                           help="画布形状/分辨率", dest="shape")
-aidraw_parser.add_argument("-c", "--scale", "-服从",
-                           type=float, help="对输入的服从度", dest="scale")
+aidraw_parser.add_argument("-r", "--resolution", "-形状", help="画布形状/分辨率", dest="shape")
 aidraw_parser.add_argument(
-    "-s", "--seed", "-种子", type=int, help="种子", dest="seed")
-aidraw_parser.add_argument("-b", "--batch", "-数量",
-                           type=int, default=1, help="生成数量", dest="batch")
-aidraw_parser.add_argument("-t", "--steps", "-步数",
-                           type=int, help="步数", dest="steps")
-aidraw_parser.add_argument("-u", "--ntags", "-排除",
-                           default=" ", nargs="*", help="负面标签", dest="ntags")
-aidraw_parser.add_argument("-e", "--strength", "-强度",
-                           type=float, help="修改强度", dest="strength")
-aidraw_parser.add_argument("-n", "--noise", "-噪声",
-                           type=float, help="修改噪声", dest="noise")
-aidraw_parser.add_argument("-o", "--override", "-不优化",
-                           action='store_true', help="不使用内置优化参数", dest="override")
+    "-c", "--scale", "-服从", type=float, help="对输入的服从度", dest="scale"
+)
+aidraw_parser.add_argument("-s", "--seed", "-种子", type=int, help="种子", dest="seed")
+aidraw_parser.add_argument(
+    "-b", "--batch", "-数量", type=int, default=1, help="生成数量", dest="batch"
+)
+aidraw_parser.add_argument("-t", "--steps", "-步数", type=int, help="步数", dest="steps")
+aidraw_parser.add_argument(
+    "-u", "--ntags", "-排除", default=" ", nargs="*", help="负面标签", dest="ntags"
+)
+aidraw_parser.add_argument(
+    "-e", "--strength", "-强度", type=float, help="修改强度", dest="strength"
+)
+aidraw_parser.add_argument(
+    "-n", "--noise", "-噪声", type=float, help="修改噪声", dest="noise"
+)
+aidraw_parser.add_argument(
+    "-o", "--override", "-不优化", action="store_true", help="不使用内置优化参数", dest="override"
+)
 
 aidraw_matcher = on_shell_command(
     ".aidraw",
     aliases={"绘画", "咏唱", "召唤", "约稿", "aidraw"},
     parser=aidraw_parser,
-    priority=5
+    priority=5,
 )
-@aidraw_matcher.handle()
-async def aidraw_get(bot: Bot, event: GroupMessageEvent, args: ParserExit = ShellCommandArgs()):
-    aidraw_matcher.finish("命令解析出错了!请不要输入奇奇怪怪的字符哦~(例如引号)")
+
 
 @aidraw_matcher.handle()
-async def aidraw_get(bot: Bot, event: GroupMessageEvent, args: Namespace = ShellCommandArgs()):
+async def aidraw_get(
+    bot: Bot, event: GroupMessageEvent, args: ParserExit = ShellCommandArgs()
+):
+    aidraw_matcher.finish("命令解析出错了!请不要输入奇奇怪怪的字符哦~(例如引号)")
+
+
+@aidraw_matcher.handle()
+async def aidraw_get(
+    bot: Bot, event: GroupMessageEvent, args: Namespace = ShellCommandArgs()
+):
     user_id = str(event.user_id)
     group_id = str(event.group_id)
     # 判断是否禁用，若没禁用，进入处理流程
@@ -67,7 +78,7 @@ async def aidraw_get(bot: Bot, event: GroupMessageEvent, args: Namespace = Shell
         message = ""
         # 判断最大生成数量
         if args.batch > config.novelai_max:
-            message = message+f",批量生成数量过多，自动修改为{config.novelai_max}"
+            message = message + f",批量生成数量过多，自动修改为{config.novelai_max}"
             args.batch = config.novelai_max
         # 判断次数限制
         if config.novelai_daylimit and not await SUPERUSER(bot, event):
@@ -91,19 +102,21 @@ async def aidraw_get(bot: Bot, event: GroupMessageEvent, args: Namespace = Shell
         # 检测是否有18+词条
         if not config.novelai_h:
             pattern = re.compile(f"(\s|,|^)({htags})(\s|,|$)")
-            if (re.search(pattern, aidraw.tags) is not None):
+            if re.search(pattern, aidraw.tags) is not None:
                 await aidraw_matcher.finish(f"H是不行的!")
         if not args.override:
-            aidraw.tags = basetag + await config.get_value(group_id, "tags") + "," + aidraw.tags
+            aidraw.tags = (
+                basetag + await config.get_value(group_id, "tags") + "," + aidraw.tags
+            )
             aidraw.ntags = lowQuality + aidraw.ntags
 
         # 以图生图预处理
         img_url = ""
         reply = event.reply
         if reply:
-            for seg in reply.message['image']:
+            for seg in reply.message["image"]:
                 img_url = seg.data["url"]
-        for seg in event.message['image']:
+        for seg in event.message["image"]:
             img_url = seg.data["url"]
         if img_url:
             if config.novelai_paid:
@@ -111,7 +124,7 @@ async def aidraw_get(bot: Bot, event: GroupMessageEvent, args: Namespace = Shell
                     logger.info(f"检测到图片，自动切换到以图生图，正在获取图片")
                     async with session.get(img_url) as resp:
                         aidraw.add_image(await resp.read())
-                    message = f"，已切换至以图生图"+message
+                    message = f"，已切换至以图生图" + message
             else:
                 await aidraw_matcher.finish(f"以图生图功能已禁用")
         logger.debug(aidraw)
@@ -120,7 +133,9 @@ async def aidraw_get(bot: Bot, event: GroupMessageEvent, args: Namespace = Shell
             anlascost = aidraw.cost
             hasanlas = await anlas_check(aidraw.user_id)
             if hasanlas >= anlascost:
-                await wait_fifo(aidraw, anlascost, hasanlas - anlascost, message=message)
+                await wait_fifo(
+                    aidraw, anlascost, hasanlas - anlascost, message=message
+                )
             else:
                 await aidraw_matcher.finish(f"你的点数不足，你的剩余点数为{hasanlas}")
         else:
@@ -132,8 +147,8 @@ async def aidraw_get(bot: Bot, event: GroupMessageEvent, args: Namespace = Shell
 async def wait_fifo(aidraw, anlascost=None, anlas=None, message=""):
     # 创建队列
     list_len = wait_len()
-    has_wait = f"排队中，你的前面还有{list_len}人"+message
-    no_wait = "请稍等，图片生成中"+message
+    has_wait = f"排队中，你的前面还有{list_len}人" + message
+    no_wait = "请稍等，图片生成中" + message
     if anlas:
         has_wait += f"\n本次生成消耗点数{anlascost},你的剩余点数为{anlas}"
         no_wait += f"\n本次生成消耗点数{anlascost},你的剩余点数为{anlas}"
@@ -161,12 +176,13 @@ async def fifo_gennerate(aidraw: AIDRAW = None):
 
     async def generate(aidraw: AIDRAW):
         id = aidraw.user_id if config.novelai_antireport else bot.self_id
-        resp = await bot.get_group_member_info(group_id=aidraw.group_id, user_id=aidraw.user_id)
+        resp = await bot.get_group_member_info(
+            group_id=aidraw.group_id, user_id=aidraw.user_id
+        )
         nickname = resp["card"] or resp["nickname"]
 
         # 开始生成
-        logger.info(
-            f"队列剩余{wait_len()}人 | 开始生成：{aidraw}")
+        logger.info(f"队列剩余{wait_len()}人 | 开始生成：{aidraw}")
         try:
             im = await _run_gennerate(aidraw)
         except Exception as e:
@@ -174,13 +190,10 @@ async def fifo_gennerate(aidraw: AIDRAW = None):
             message = f"生成失败，"
             for i in e.args:
                 message += str(i)
-            await bot.send_group_msg(
-                message=message,
-                group_id=aidraw.group_id
-            )
+            await bot.send_group_msg(message=message, group_id=aidraw.group_id)
         else:
             logger.info(f"队列剩余{wait_len()}人 | 生成完毕：{aidraw}")
-            if await config.get_value(aidraw.group_id, "pure"):
+            if await config.novelai_pure:
                 message = MessageSegment.at(aidraw.user_id)
                 for i in im["image"]:
                     message += i
@@ -191,8 +204,7 @@ async def fifo_gennerate(aidraw: AIDRAW = None):
             else:
                 message = []
                 for i in im:
-                    message.append(MessageSegment.node_custom(
-                        id, nickname, i))
+                    message.append(MessageSegment.node_custom(id, nickname, i))
                 message_data = await bot.send_group_forward_msg(
                     messages=message,
                     group_id=aidraw.group_id,
@@ -203,8 +215,7 @@ async def fifo_gennerate(aidraw: AIDRAW = None):
                 loop = get_running_loop()
                 loop.call_later(
                     revoke,
-                    lambda: loop.create_task(
-                        bot.delete_msg(message_id=message_id)),
+                    lambda: loop.create_task(bot.delete_msg(message_id=message_id)),
                 )
 
     if aidraw:

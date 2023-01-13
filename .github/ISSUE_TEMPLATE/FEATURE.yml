@@ -1,0 +1,51 @@
+name: ✨ 功能需求 (FEATURE REPORT)
+description: 为项目提出一个新的想法或建议
+title: "[Feature]: "
+labels: ["enhancement"]
+assignees:
+  - Sena-nana
+body:
+  - type: markdown
+    attributes:
+      value: |
+        ### ⚠️注意事项
+        此模板专用于报告功能需求，如果您打开的问题存在以下问题，它将会被直接关闭。
+
+        - 你的需求是不可能会加入的或是不可能实现的
+        - 你所报告的需求已经被报告过
+        - 你的报告内容和需求无关而是一个错误反馈或是使用咨询
+        - 你的报告内容不清晰，无法从中推测出你想要的功能
+
+        请确保你已经读过了[插件文档](https://nb.novelai.dev)，并且你的功能在文档中没有列出
+        如果您不知道如何有效、精准地提出一个问题，我们建议您先阅读[提问的智慧](https://github.com/ryanhanwu/How-To-Ask-Questions-The-Smart-Way/blob/main/README-zh_CN.md)
+
+  - type: checkboxes
+    id: checklist
+    attributes:
+      label: 报告清单
+      description: 请确认您已遵守所有必选项。
+      options:
+        - 我已仔细阅读并了解上述注意事项
+        - 我已使用最新版本测试过，确认功能尚未实现
+        - 我确定在 GitHub Issues 中没有相同或相似的需求
+    validations:
+      required: true
+  - type: textarea
+    id: what_happend
+    attributes:
+      label: 需求原因
+      description: 请清晰准确地描述是什么导致你想要这个新功能
+    validations:
+      required: true
+  - type: textarea
+    id: what_i_what
+    attributes:
+      label: 预期行为
+      description: 如果这个需求已经实现，那么它与现在的版本表现有什么不同
+    validations:
+      required: true
+  - type: textarea
+    id: log
+    attributes:
+      label: 解决方案
+      description: 你希望以什么方式实现你的需求

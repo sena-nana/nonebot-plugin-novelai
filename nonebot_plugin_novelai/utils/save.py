@@ -1,8 +1,13 @@
-from ..config import config
-from pathlib import Path
 import hashlib
+from pathlib import Path
+
 import aiofiles
+
+from ..config import config
+
 path = Path("data/novelai/output").resolve()
+
+
 async def save_img(request, img_bytes: bytes, extra: str = "unknown"):
     # 存储图片
     if config.novelai_save:

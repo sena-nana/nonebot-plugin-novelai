@@ -270,3 +270,7 @@ node_modules
 setup.bat
 __backup__
 nonebot_plugin_novelai.zip
+node_modules/
+docs/.vuepress/.cache/
+docs/.vuepress/.temp/
+docs/.vuepress/dist/

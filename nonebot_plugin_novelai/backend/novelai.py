@@ -1,5 +1,7 @@
 from ..config import config
 from .base import AIDRAW_BASE
+
+
 class AIDRAW(AIDRAW_BASE):
     """队列中的单个请求"""
 
@@ -28,14 +30,16 @@ class AIDRAW(AIDRAW_BASE):
                 "uc": self.ntags,
             }
             if self.img2img:
-                parameters.update({
-                    "image": self.image,
-                    "strength": self.strength,
-                    "noise": self.noise
-                })
-            json= {
+                parameters.update(
+                    {
+                        "image": self.image,
+                        "strength": self.strength,
+                        "noise": self.noise,
+                    }
+                )
+            json = {
                 "input": self.tags,
                 "model": "nai-diffusion" if config.novelai_h else "safe-diffusion",
-                "parameters": parameters
+                "parameters": parameters,
             }
-            await self.post_(header, post_api,json)
+            await self.post_(header, post_api, json)

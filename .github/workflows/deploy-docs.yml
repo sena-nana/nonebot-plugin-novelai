@@ -18,7 +18,6 @@ jobs:
           # 如果你文档需要 Git 子模块，取消注释下一行
           # submodules: true
 
-
       - name: 安装 pnpm
         uses: pnpm/action-setup@v2
         with:
@@ -29,11 +28,9 @@ jobs:
       - name: 设置 Node.js
         uses: actions/setup-node@v3
         with:
-          node-version: 16
+          node-version: 18
           cache: pnpm
 
-      - name: 安装依赖
-        run: pnpm install --frozen-lockfile
 
       - name: 构建文档
         env:
@@ -48,4 +45,3 @@ jobs:
           # 这是文档部署到的分支名称
           branch: gh-pages
           folder: docs/.vuepress/dist
-

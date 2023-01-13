@@ -27,7 +27,7 @@ class AIDRAW(AIDRAW_BASE):
                 "width": self.width,
                 "height": self.height,
                 "negative_prompt": self.ntags,
-                "white_background":True,
+                "transparent_color":"#FFFFFF",
                 "override_settings":{
                     "filter_nsfw":True if config.novelai_h else False,
                     "CLIP_stop_at_last_layers":2,

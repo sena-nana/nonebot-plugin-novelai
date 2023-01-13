@@ -1,24 +1,28 @@
 import json
 from pathlib import Path
-#from .fifo import FIFO
+
+# from .fifo import FIFO
 import aiofiles
 from nonebot import get_driver, on_command
-from nonebot.permission import SUPERUSER
 from nonebot.log import logger
+from nonebot.permission import SUPERUSER
 from pydantic import BaseSettings, validator
 from pydantic.fields import ModelField
+
 driver = get_driver()
 jsonpath = Path("data/novelai/config.json").resolve()
-nickname = list(driver.config.nickname)[0] if len(
-    driver.config.nickname) else "nonebot-plugin-novelai"
-
+nickname = (
+    list(driver.config.nickname)[0]
+    if len(driver.config.nickname)
+    else "nonebot-plugin-novelai"
+)
 
 
 async def load():
     global config
     config = Config(**get_driver().config.dict())
     logger.info(f"加载config完成" + str(config))
-    #fifo = FIFO(config.novelai)
+    # fifo = FIFO(config.novelai)
 
 
 class Config(BaseSettings):
@@ -51,7 +55,13 @@ class Config(BaseSettings):
 
     # 允许单群设置的设置
     def keys(cls):
-        return ("novelai_cd", "novelai_tags", "novelai_on", "novelai_ntags", "novelai_revoke")
+        return (
+            "novelai_cd",
+            "novelai_tags",
+            "novelai_on",
+            "novelai_ntags",
+            "novelai_revoke",
+        )
 
     def __getitem__(cls, item):
         return getattr(cls, item)
@@ -120,8 +130,7 @@ class Config(BaseSettings):
             configdict: dict = json.loads(jsonraw)
             baseconfig = {}
             for i in cls.keys():
-                value = configdict.get(group_id, {}).get(
-                    i, dict(cls)[i])
+                value = configdict.get(group_id, {}).get(i, dict(cls)[i])
                 baseconfig[i] = value
             logger.debug(baseconfig)
             return baseconfig
@@ -159,5 +168,7 @@ class Config(BaseSettings):
         else:
             logger.debug(f"不正确的赋值,{arg_},{value},{type(value)}")
             return False
+
+
 config = Config(**get_driver().config.dict())
 logger.info(f"加载config完成" + str(config))

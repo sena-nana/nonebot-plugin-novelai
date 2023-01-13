@@ -1,0 +1,74 @@
+name: 🐛 错误报告 (BUG REPORT)
+description: 报告你遇到的错误来帮助我们改进
+title: "[Bug]: "
+labels: ["bug"]
+assignees:
+  - Sena-nana
+body:
+  - type: markdown
+    attributes:
+      value: |
+        ### ⚠️注意事项
+        此模板专用于报告错误，如果您打开的问题存在以下问题，它将会被直接关闭。
+
+        - 你的问题并非由错误而是由于未正确使用引起
+        - 你所报告的错误已经被报告过
+        - 你的报告内容和错误无关而是一个功能请求或是使用咨询
+        - 你的报告内容不清晰，无法从中推测出你遇到的问题和重现方法
+        - 你的报告内容中使用了较老的版本并且在新版本上无法复现
+
+        请确保你已经读过了[插件文档](https://nb.novelai.dev)，并且你的问题在文档中没有列出
+        如果您不知道如何有效、精准地提出一个问题，我们建议您先阅读[提问的智慧](https://github.com/ryanhanwu/How-To-Ask-Questions-The-Smart-Way/blob/main/README-zh_CN.md)
+
+  - type: checkboxes
+    id: checklist
+    attributes:
+      label: 报告清单
+      description: 请确认您已遵守所有必选项。
+      options:
+        - 我已仔细阅读并了解上述注意事项
+        - 我已使用最新版本测试过，确认问题依旧存在
+        - 我确定在 GitHub Issues 中没有相同或相似的问题
+    validations:
+      required: true
+  - type: input
+    id: version
+    attributes:
+      label: 发生错误的版本号
+      description: 不是插件名字，在shell中使用pip show nonebot-plugin-novelai可以查看
+      placeholder: 版本号或者 Commit ID
+    validations:
+      required: true
+  - type: textarea
+    id: what_happend
+    attributes:
+      label: 问题描述
+      description: 请清晰准确地描述你遇到的问题
+    validations:
+      required: true
+  - type: textarea
+    id: how_to_reproduce
+    attributes:
+      label: 如何复现
+      description: 你是如何触发这个错误的，请确保你提供的方法其他人照着做能够得到同样的错误
+      value: |
+        1. 我在配置文件里设置了……
+        2. 我的运行环境是……
+        3. 我对BOT使用的指令是……
+        4. 我做的其他操作是……
+        5. 发生了……
+    validations:
+      required: true
+  - type: textarea
+    id: what_i_what
+    attributes:
+      label: 预期行为
+      description: 如果该错误不存在，你期望得到的是怎样的结果
+  - type: textarea
+    id: log
+    attributes:
+      label: 日志信息
+      description: 在这里提供任何你觉得对排查错误有帮助的日志或报错信息
+      placeholder: |
+        如果你不知道该写什么，那就把Nonebot和gocq窗口的所有看起来像是报错的一部分的东西全都截图或者复制放在这里
+        记得将你的敏感信息打码
