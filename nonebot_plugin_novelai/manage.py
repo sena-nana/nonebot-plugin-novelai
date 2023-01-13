@@ -4,25 +4,12 @@ from nonebot.log import logger
 from nonebot.params import RegexGroup
 from nonebot.permission import SUPERUSER
 
-from .config import config, load
+from .config import config
 
-on = on_regex(f"(?:\.aidraw|绘画|aidraw)[ ]*(on|off|开启|关闭)", priority=4, block=True)
+on = on_regex(f"(?:^绘画|^aidraw)[ ]*(on$|off$|开启$|关闭$)", priority=4, block=True)
 set = on_regex(
-    "(?:\.aidraw set|绘画设置|aidraw set)[ ]*([a-z]*)[ ]*(.*)", priority=4, block=True
+    "(?:^绘画设置|^aidraw set)[ ]*([a-z]*)[ ]*(.*)", priority=4, block=True
 )
-reload_matcher = on_regex(
-    f"(?:\.aidraw|绘画|aidraw)[ ]*(reload|重启)",
-    permission=SUPERUSER,
-    priority=4,
-    block=True,
-)
-
-
-@reload_matcher.handle()
-async def reload():
-    await load()
-    reload_matcher.finish("nonebot-plugin-novelai设置重载完成，队列已经全部清空")
-
 
 @set.handle()
 async def set_(bot: Bot, event: GroupMessageEvent, args=RegexGroup()):

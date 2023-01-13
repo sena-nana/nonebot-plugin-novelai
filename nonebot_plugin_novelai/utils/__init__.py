@@ -5,7 +5,6 @@ from io import BytesIO
 import aiohttp
 from PIL import Image
 
-
 async def check_last_version(package: str):
     # 检查包的最新版本
     async with aiohttp.ClientSession() as session:

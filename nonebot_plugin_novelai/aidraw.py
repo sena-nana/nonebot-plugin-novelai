@@ -53,18 +53,17 @@ aidraw_parser.add_argument(
 )
 
 aidraw_matcher = on_shell_command(
-    ".aidraw",
-    aliases={"绘画", "咏唱", "召唤", "约稿", "aidraw"},
+    "aidraw",
+    aliases={"绘画", "咏唱", "召唤", "约稿"},
     parser=aidraw_parser,
     priority=5,
 )
 
 
 @aidraw_matcher.handle()
-async def aidraw_get(
-    bot: Bot, event: GroupMessageEvent, args: ParserExit = ShellCommandArgs()
+async def aidraw_get(args: ParserExit = ShellCommandArgs()
 ):
-    aidraw_matcher.finish("命令解析出错了!请不要输入奇奇怪怪的字符哦~(例如引号)")
+    aidraw_matcher.finish("命令解析出错了!请不要输入奇奇怪怪的字符哦~(引号不闭合也不可以哦)")
 
 
 @aidraw_matcher.handle()
@@ -88,13 +87,14 @@ async def aidraw_get(
             else:
                 message = message + f"，今天你还能够生成{left}张"
         # 判断cd
-        nowtime = time.time()
-        deltatime = nowtime - cd.get(user_id, 0)
-        cd_ = int(await config.get_value(group_id, "cd"))
-        if deltatime < cd_:
-            await aidraw_matcher.finish(f"你冲的太快啦，请休息一下吧，剩余CD为{cd_ - int(deltatime)}s")
-        else:
-            cd[user_id] = nowtime
+        if not SUPERUSER(bot, event):
+            nowtime = time.time()
+            deltatime = nowtime - cd.get(user_id, 0)
+            cd_ = int(await config.get_value(group_id, "cd"))
+            if deltatime < cd_:
+                await aidraw_matcher.finish(f"你冲的太快啦，请休息一下吧，剩余CD为{cd_ - int(deltatime)}s")
+            else:
+                cd[user_id] = nowtime
         # 初始化参数
         args.tags = await prepocess_tags(args.tags)
         args.ntags = await prepocess_tags(args.ntags)

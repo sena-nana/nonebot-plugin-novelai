@@ -1,6 +1,6 @@
 import re
 
-from ..extension.translation import translate
+from .translation import translate
 
 
 async def prepocess_tags(tags: list[str]):

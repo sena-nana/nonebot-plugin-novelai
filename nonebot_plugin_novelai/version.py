@@ -1,9 +1,13 @@
 import time
 from importlib.metadata import version
-
+from nonebot import on_command
 from nonebot.log import logger
-
+import asyncio
+import sys
 from .utils import check_last_version, compare_version, sendtosuperuser
+
+check = on_command("check", aliases={"检查更新", "更新", "check"}, priority=5)
+update = on_command("update", aliases={"更新", "update"}, priority=5)
 
 
 class Version:
@@ -12,14 +16,14 @@ class Version:
     ispushed: bool = True  # 是否已经推送
     latest: str = "0.0.0"  # 最新版本
     package = "nonebot-plugin-novelai"
-    url = "https://sena-nana.github.io/MutsukiDocs/update/novelai/"
+    url = "https://nb.novelai.dev"
 
     def __init__(self):
         # 初始化当前版本
         try:
             self.version = version(self.package)
         except:
-            self.version = "0.5.5"
+            self.version = "0.6.0"
 
     async def check_update(self):
         """检查更新，并推送"""
@@ -43,10 +47,28 @@ class Version:
             await sendtosuperuser(self.push_txt())
             self.ispushed = True
 
+    @property
     def push_txt(self):
         # 获取推送文本
         logger.debug(self.__dict__)
         return f"novelai插件检测到新版本{self.latest},当前版本{self.version},请使用pip install --upgrade {self.package}命令升级,更新日志：{self.url}"
+
+    async def update():
+        proc = await asyncio.create_subprocess_exec(
+            sys.executable,
+            "-m",
+            "pip",
+            "install",
+            "-U",
+            "nb-cli",
+            stdout=asyncio.subprocess.PIPE,
+            stderr=asyncio.subprocess.PIPE,
+        )
+        _, b = await proc.communicate()
+        return b.decode()
+
+    async def get_update_log():
+        pass
 
 
 version = Version()

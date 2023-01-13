@@ -1,95 +1,100 @@
-# 支持中文关键词的基于nonebot2的AI绘图插件
-插件讨论反馈群：687904502
-说明书：https://sena-nana.github.io/MutsukiDocs/
+<div align="center">
+  <a href="https://nb.novelai.dev"><img src="imgs/head.jpg" width="180" height="180" alt="NoneBot-plugin-novelai" style="border-radius:100%; overflow:hidden;"></a>
+  <br>
+</div>
 
-环境需求：
-- Python>=3.8
-- nonebot2>=b4
-## 依赖
-aiohttp,aiofiles
-## 配置文件
-如果你使用官方服务器，需要将以下信息写入env文件(目前必须填)
+<div align="center">
 
-1. NOVELAI_TOKEN="str"   你的Novelai token，需要f12抓取
+# Nonebot-plugin-novelai
 
-可选信息
+_✨ 中文输入、对接 webui、以及你能想到的大部分功能 ✨_
 
-1. NOVELAI_TAG="str"   所有生成都会事先加上这些tag，用来塞私货或者精简指令
-2. NOVELAI_CD=int   单个用户的cd，默认为60s
-3. NOVELAI_LIMIT=bool   是否启用并行限制，启用的话，bot会将请求加入队列，在服务器返回之前的结果后再申请。可以防止请求过快，在不知道官方会不会封号的情况下有心理安慰作用。默认开启
-6. NOVELAI_SAVE=int  是否自动保存到本地，默认开启（1）
-7. NOVELAI_MODE=dict   设置插件运行模式，默认"novelai"，详细查看说明书（还没写）
-8. NOVELAI_PAID=int   是否启用已付费模式,默认为0（禁用），1为点数模式，2为严格点数模式，3为无限制模式
-9. NOVELAI_DAYLIMIT=int 是否启用每日次数限制，默认为0（禁用），值为次数
-9. NOVELAI_BAN=list[int] 设置在哪些群禁用，默认为空，运行时可通过指令修改
-10. NOVELAI_H=bool 是否启用r18模式，默认关闭（开启后被风控或者封号不要发issue）
-10. NOVELAI_ONCEMAX=int 单次允许生成的最大数量
-10. NOVELAI_REVOKE=int 是否自动撤回
+[讨论群](https://jq.qq.com/?_wv=1027&k=pT3Mn4jG)|[说明书](https://nb.novelai.dev)|[ENGLISH](./README_EN.md)
 
-## 说明
-该插件允许在nonebot2前端软件中使用ai绘图，支持的后端为novalai官方，naifu和webui
+<a href="./LICENSE">
+    <img src="https://img.shields.io/github/license/sena-nana/nonebot-plugin-novelai" alt="license">
+</a>
+<a href="https://pypi.python.org/pypi/nonebot-plugin-novelai">
+    <img src="https://img.shields.io/pypi/v/nonebot-plugin-novelai" alt="pypi">
+</a>
+<img src="https://img.shields.io/badge/python-3.8+-blue.svg" alt="python">
 
-novelai模式需要token才能运行，所以你需要首先购买novelai的25刀套餐（25刀套餐支持无限生成）。其他套餐也支持，但是会扣费。
-## 指令示例
+</div>
 
-.aidraw loli,cute --ntags big breast --seed 114514
-- 指令使用shell解析输入的参数
-- square为指定画幅，支持简写为s，其他画幅为portrait和landscape，同样支持简写，默认为portrait
-- seed若省略则为自动生成
-- 词条使用英文，使用逗号（中英都行，代码里有转换）分割，中文会自动机翻为英文，不支持其他语种
-- 如果你不想用.aidraw，可以用 **绘画** 、 **咏唱** 或 **召唤** 代替。
-- 在消息中添加图片或者回复带有图片的消息自动切换为以图生图模式
+## 📖 功能介绍
 
-.aidraw on/off
-- 启动/关闭本群的aidraw
+- AI 绘画
+  - 支持 CD 限速和绘画队列
+  - 支持高级请求语法
+  - 内置翻译 Api，自动翻译中文
+  - 内置屏蔽词，可设置全局词条和排除词条
+  - 返回消息支持简洁模式和详细模式
+  - 模拟官方的点数管理模式，并能够按用户限制总额和每日使用量
+  - 支持多后端负载均衡(Todo)
+  - 支持自定义回复格式(Todo)
+- 管理
+  - 支持群黑白名单
+  - 提供了管理指令用于运行时修改部分设置
+  - Web 管理界面(Todo)
+- 支持后端
+  - novelai 官网
+  - naifu
+  - stable diffusion webui(本地，远程 or colab)
+  - 另一个 novelai 插件(Todo)
+  - 由第三方扩展的后端
+- 扩展功能
+  - 查询图片 TAG
+  - 由第三方实现的扩展
+- 自我管理
+  - 版本检查和更新提醒，支持插件热更新和自动重启
+  - 内置简易权限管理，被封退群，加群管理(Todo)
 
-.anlas check
-- 查看自己拥有的点数
+## 💿 安装
 
-.anlas
-- 查看帮助
+<details>
+<summary>使用 nb-cli 安装 (推荐)</summary>
+在 nonebot2 项目的根目录下打开命令行, 输入以下指令即可安装
 
-.anlas [数字] @[某人]
-- 将自己的点数分给别人(superuser点数无限)
+    nb plugin install nonebot-plugin-novelai
 
-.tagget [图片]
-- 获取图片的TAG
-- 如果你不想用.tagget，可以用 **鉴赏** 或 **查书** 代替。
+</details>
+<details>
+<summary>使用包管理器安装</summary>
+在 nonebot2 项目的根目录下, 打开命令行, 根据你使用的包管理器, 输入相应的安装命令
 
-## FEATURE
-- NAIFU
-    - [x] 支持文本生图
-    - [x] 支持以图生图
-- WEBUI
-    - [x] 支持文本生图
-    - [x] 支持以图生图
-- NOVELAI
-    - [x] 支持文本生图
-    - [x] 支持以图生图
-- OTHERS
-    - 群聊管理
-        - [x] 支持分群设置
-    - 速度限制
-        - [x] 支持内置CD和并行限制
-        - [x] 付费点数制
-        - [x] 严格点数制
-        - [x] 每日上限制
-    - 娱乐功能
-        - [x] 支持查询图片词条
-        - [ ] 随机少女
-        - [ ] 内置咒语集
-        - [ ] 支持数据统计
-    - 命令处理（需要重构）
-        - [x] 支持文字生图画幅指定，种子指定
-        - [x] 支持输入排除词条
-        - [x] 支持批量生成
-    - 命令优化
-        - [x] 内置优化词条模板并自动使用
-        - [x] 支持管理员塞私货
-        - [x] 支持机翻词条为英文
-    - [x] 生成图片自动保存至data/novelai文件夹
-    - [x] 支持开关禁止nsfw
-    - [x] 更新提醒
-    - [ ] 支持i18n
-    - [ ] 支持多台后端负载均衡
-    - [ ] 说明书
+<details>
+<summary>pip</summary>
+
+    pip install nonebot-plugin-novelai
+
+</details>
+<details>
+<summary>pdm</summary>
+
+    pdm add nonebot-plugin-novelai
+
+</details>
+<details>
+<summary>poetry</summary>
+
+    poetry add nonebot-plugin-novelai
+
+</details>
+<details>
+<summary>conda</summary>
+
+    conda install nonebot-plugin-novelai
+
+</details>
+
+打开 nonebot2 项目的 `pyproject.toml` 文档, 在其中 **plugins** 列表中，加入"nonebot-plugin-novelai"
+
+</details>
+
+## ⚙️ 配置
+
+请前往说明书查看[全局配置](https://nb.novelai.dev/main/config.html)一节
+
+## 🎉 使用
+
+请前往说明书查看[使用](https://nb.novelai.dev/main/aidraw.html)一节

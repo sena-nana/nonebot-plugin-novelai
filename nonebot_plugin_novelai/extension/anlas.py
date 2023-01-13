@@ -2,13 +2,13 @@ import json
 from pathlib import Path
 
 import aiofiles
-from nonebot import get_driver, on_command
+from nonebot import on_command
 from nonebot.adapters.onebot.v11 import Bot, GroupMessageEvent, Message, MessageSegment
 from nonebot.params import CommandArg
 from nonebot.permission import SUPERUSER
 
 jsonpath = Path("data/novelai/anlas.json").resolve()
-setanlas = on_command(".anlas")
+setanlas = on_command("anlas")
 
 
 @setanlas.handle()
