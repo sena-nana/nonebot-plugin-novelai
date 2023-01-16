@@ -1,7 +1,7 @@
 ---
 title: 全局配置
 icon: markdown
-order: 2
+order: 3
 tag:
   - Markdown
 ---

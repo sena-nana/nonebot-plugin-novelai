@@ -5,13 +5,8 @@ import codecs
 
 with codecs.open("README.md", encoding="utf-8") as fp:
     long_description = fp.read()
-INSTALL_REQUIRES = [
-    "aiohttp>=3.8.3",
-    "nonebot-adapter-onebot>=2.1.3",
-    "nonebot2>=2.0.0b4",
-    "aiofiles>=22.1.0",
-    "pillow>=9.2.0",
-]
+with codecs.open("requirements.txt", encoding="utf-8") as fp:
+    INSTALL_REQUIRES = fp.read().splitlines()
 
 setup_kwargs = {
     "name": "nonebot-plugin-novelai",

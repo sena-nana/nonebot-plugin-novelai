@@ -127,11 +127,10 @@ dmypy.json
 
 # Pyre type checker
 .pyre/
-test/
 .pdm.toml
 pdm.lock
 pyproject.toml
-test.*
+test*.*
 # Logs
 logs
 *.log

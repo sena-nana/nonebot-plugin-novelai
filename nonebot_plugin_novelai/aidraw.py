@@ -1,9 +1,12 @@
+import hashlib
 import re
 import time
 from argparse import Namespace
 from asyncio import get_running_loop
 from collections import deque
+from pathlib import Path
 
+import aiofiles
 import aiohttp
 from aiohttp.client_exceptions import ClientConnectorError, ClientOSError
 from nonebot import get_bot, on_shell_command
@@ -18,10 +21,8 @@ from .backend import AIDRAW
 from .config import config
 from .extension.anlas import anlas_check, anlas_set
 from .extension.daylimit import DayLimit
-from .utils import sendtosuperuser
-from .utils.data import basetag, htags, lowQuality
-from .utils.prepocess import prepocess_tags
-from .utils.save import save_img
+from .extension.translation import translate
+from .utils import BASE_TAG, HTAGS, LOW_QUALITY, sendtosuperuser
 from .version import version
 
 cd = {}
@@ -61,8 +62,7 @@ aidraw_matcher = on_shell_command(
 
 
 @aidraw_matcher.handle()
-async def aidraw_get(args: ParserExit = ShellCommandArgs()
-):
+async def aidraw_get(args: ParserExit = ShellCommandArgs()):
     aidraw_matcher.finish("命令解析出错了!请不要输入奇奇怪怪的字符哦~(引号不闭合也不可以哦)")
 
 
@@ -92,7 +92,9 @@ async def aidraw_get(
             deltatime = nowtime - cd.get(user_id, 0)
             cd_ = int(await config.get_value(group_id, "cd"))
             if deltatime < cd_:
-                await aidraw_matcher.finish(f"你冲的太快啦，请休息一下吧，剩余CD为{cd_ - int(deltatime)}s")
+                await aidraw_matcher.finish(
+                    f"你冲的太快啦，请休息一下吧，剩余CD为{cd_ - int(deltatime)}s"
+                )
             else:
                 cd[user_id] = nowtime
         # 初始化参数
@@ -101,14 +103,14 @@ async def aidraw_get(
         aidraw = AIDRAW(user_id=user_id, group_id=group_id, **vars(args))
         # 检测是否有18+词条
         if not config.novelai_h:
-            pattern = re.compile(f"(\s|,|^)({htags})(\s|,|$)")
+            pattern = re.compile(f"(\s|,|^)({HTAGS})(\s|,|$)")
             if re.search(pattern, aidraw.tags) is not None:
                 await aidraw_matcher.finish(f"H是不行的!")
         if not args.override:
             aidraw.tags = (
-                basetag + await config.get_value(group_id, "tags") + "," + aidraw.tags
+                BASE_TAG + await config.get_value(group_id, "tags") + "," + aidraw.tags
             )
-            aidraw.ntags = lowQuality + aidraw.ntags
+            aidraw.ntags = LOW_QUALITY + aidraw.ntags
 
         # 以图生图预处理
         img_url = ""
@@ -172,14 +174,22 @@ def wait_len():
 async def fifo_gennerate(aidraw: AIDRAW = None):
     # 队列处理
     global gennerating
-    bot = get_bot()
+    bot: Bot = get_bot()
 
     async def generate(aidraw: AIDRAW):
         id = aidraw.user_id if config.novelai_antireport else bot.self_id
         resp = await bot.get_group_member_info(
             group_id=aidraw.group_id, user_id=aidraw.user_id
         )
-        nickname = resp["card"] or resp["nickname"]
+        nickname: str = (
+            (resp["card"] or resp["nickname"])
+            if config.novelai_antireport
+            else (
+                get_bot().config.nickname.pop()
+                if get_bot().config.nickname
+                else "nonebot-plugin-novelai"
+            )
+        )
 
         # 开始生成
         logger.info(f"队列剩余{wait_len()}人 | 开始生成：{aidraw}")
@@ -193,7 +203,7 @@ async def fifo_gennerate(aidraw: AIDRAW = None):
             await bot.send_group_msg(message=message, group_id=aidraw.group_id)
         else:
             logger.info(f"队列剩余{wait_len()}人 | 生成完毕：{aidraw}")
-            if await config.novelai_pure:
+            if config.novelai_pure:
                 message = MessageSegment.at(aidraw.user_id)
                 for i in im["image"]:
                     message += i
@@ -260,3 +270,42 @@ async def _run_gennerate(aidraw: AIDRAW):
     if aidraw.cost > 0:
         await anlas_set(aidraw.user_id, -aidraw.cost)
     return message
+
+
+async def prepocess_tags(tags: list[str]):
+    tags: str = "".join([i + " " for i in tags if isinstance(i, str)])
+    # 处理奇奇怪怪的输入
+    tags = re.sub("[\f\n\r\t\v?<>\\/*\|:]", "", tags)
+    # 去除CQ码
+    tags = re.sub("\[CQ[^\s]*?]", "", tags)
+    # 检测中文
+    taglist = tags.split(",")
+    tagzh = ""
+    tags_ = ""
+    for i in taglist:
+        if re.search("[\u4e00-\u9fa5]", tags):
+            tagzh += f"{i},"
+        else:
+            tags_ += f"{i},"
+    if tagzh:
+        tags_en = await translate(tagzh, "en")
+        if tags_en == tagzh:
+            return ""
+        else:
+            tags_ += tags_en
+    return tags_
+
+
+async def save_img(request, img_bytes: bytes, extra: str = "unknown"):
+    # 存储图片
+    path = Path("data/novelai/output").resolve()
+    if config.novelai_save:
+        path_ = path / extra
+        path_.mkdir(parents=True, exist_ok=True)
+        hash = hashlib.md5(img_bytes).hexdigest()
+        file = (path_ / hash).resolve()
+        async with aiofiles.open(str(file) + ".jpg", "wb") as f:
+            await f.write(img_bytes)
+        if config.novelai_debug:
+            async with aiofiles.open(str(file) + ".txt", "w") as f:
+                await f.write(repr(request))

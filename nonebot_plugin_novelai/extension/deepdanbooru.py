@@ -5,7 +5,7 @@ from nonebot import on_command
 from nonebot.adapters.onebot.v11 import GroupMessageEvent, MessageSegment
 from nonebot.log import logger
 
-from ..utils.translation import translate
+from .translation import translate
 
 deepdanbooru = on_command("gettag", aliases={"鉴赏", "查书"})
 

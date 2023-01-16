@@ -10,8 +10,7 @@ from nonebot.log import logger
 from PIL import Image
 
 from ..config import config
-from ..utils import png2jpg
-from ..utils.data import shapemap
+from ..utils import SHAPE_MAP
 
 
 class AIDRAW_BASE:
@@ -104,9 +103,9 @@ class AIDRAW_BASE:
                 if width.isdigit() and height.isdigit():
                     return self.shape_set(int(width), int(height))
                 else:
-                    return shapemap.get(shape)
+                    return SHAPE_MAP.get(shape)
             else:
-                return shapemap.get(shape)
+                return SHAPE_MAP.get(shape)
         else:
             return (512, 768)
 
@@ -205,15 +204,23 @@ class AIDRAW_BASE:
 
                 # 将图片转化为jpg
                 if config.novelai_save == 1:
-                    image_new = await png2jpg(img)
+                    image_new = await self.png2jpg(img)
                 else:
                     image_new = base64.b64decode(img)
         self.result.append(image_new)
         return image_new
 
-    async def fromresp(self, resp):
+    async def png2jpg(raw: bytes):
+        raw: BytesIO = BytesIO(base64.b64decode(raw))
+        img_PIL = Image.open(raw).convert("RGB")
+        image_new = BytesIO()
+        img_PIL.save(image_new, format="JPEG", quality=95)
+        image_new = image_new.getvalue()
+        return image_new
+
+    async def fromresp(self, resp: aiohttp.ClientResponse):
         """
-        处理请求的返回内容，不要直接调用，请使用post函数
+        处理请求的返回内容，并返回一个base64编码的图片str
         """
         img: str = await resp.text()
         return img.split("data:")[1]

@@ -9,7 +9,7 @@
 
 _✨ Chinese input, sd-webui supported, and most other features you can imagine ✨_
 
-[Discussing QQ group](https://jq.qq.com/?_wv=1027&k=pT3Mn4jG)|[Manual](https://nb.novelai.dev)|[中文](./README.md)
+[Discussing QQ group](https://jq.qq.com/?_wv=1027&k=pT3Mn4jG)|[Manual](https://nb.novelai.dev)|[Packed Version]()|[中文](./README.md)
 
 <a href="./LICENSE">
     <img src="https://img.shields.io/github/license/sena-nana/nonebot-plugin-novelai" alt="license">
@@ -52,15 +52,26 @@ _✨ Chinese input, sd-webui supported, and most other features you can imagine 
 ## 💿 Install
 
 <details>
-<summary>Using nb-cli (Recommend)</summary>
-Open the command line in the root directory of the nonebot2 project and enter the following instructions to install
+<summary>Install using nb-cli (recommended)</summary>
 
-    nb plugin install nonebot-plugin-novelai
+1. Open the terminal in the root directory of the nonebot2 project
+2. If you are a Windows user, enter `./.venv/Scripts/activate` and enter. If you are a Linux user, enter `source ./.venv/bin/activate` and enter.You should be able to see the terminal activate the virtual environment on the new line.
+If the project you created with older nb-cli does not exist in the .venv folder, skip this step
+
+3. Finally, enter the following instructions to install
+
+```
+nb plugin install nonebot-plugin-novelai
+```
 
 </details>
 <details>
 <summary>Install using the package Manager</summary>
-In the root directory of the nonebot2 project, open the command line and enter the appropriate installation command according to the package manager you are using
+
+1. Open the terminal in the root directory of the nonebot2 project
+2. If you are a Windows user, enter `./.venv/Scripts/activate` and enter. If you are a Linux user, enter `source ./.venv/bin/activate` and enter.You should be able to see the terminal activate the virtual environment on the new line.
+If the project you created with older nb-cli does not exist in the .venv folder, skip this step
+3. According to the package manager you use, enter the appropriate installation command
 
 <details>
 <summary>pip</summary>
@@ -87,8 +98,29 @@ In the root directory of the nonebot2 project, open the command line and enter t
 
 </details>
 
-Open the `pyproject.toml` document of the nonebot2 project, and in the **plugins** list, add "nonebot-plugin-novelai"
+4. Open the `pyproject.toml` document of the nonebot2 project, and in the list named **plugins**, add "nonebot-plugin-novelai"
 
+</details>
+<details>
+<summary>install using source code (not recommended)</summary>
+
+> Unless you have confidence in your problem-solving ability and have the need to modify plugin, you should not choose this approach.This method cannot update the version through the above two methods, and will conflict with the update feature of the plugin
+
+1. (nb-cli version 1.0 +) make sure you choose the developer version project structure when creating the project, otherwise there is no folder in the plug-in directory where you can place plug-ins.
+2. Open the terminal in the root directory of the nonebot2 project
+3. If you are a Windows user, enter `./.venv/Scripts/activate` and enter. If you are a Linux user, enter `source ./.venv/bin/activate` and enter.You should be able to see the terminal activate the virtual environment on the new line.
+If the project you created with older nb-cli does not exist in the .venv folder, skip this step
+4. Download the source code in Github
+   1. [Stable Version](https://github.com/sena-nana/nonebot-plugin-novelai/releases/download/v0.6.0/nonebot_plugin_novelai.zip)
+   2. [Nightly Version](https://github.com/sena-nana/nonebot-plugin-novelai/archive/refs/heads/main.zip)
+5. Open the zip file downloaded in the previous step, copy the **requirements.txt** to the root directory of the bot project, and extract the **nonebot_plugin_novelai** folder to the src/plugins folder in the bot directory.
+6. Run the following instructions in the terminal. If you are using a package manager other than pip, please use the corresponding instructions
+
+```
+pip install -r requirements.txt
+```
+
+7. Now you can delete the **requirements.txt** file.
 </details>
 
 ## ⚙️ Config
@@ -98,3 +130,11 @@ Please go to the manual to see [Global configuration](https://nb.novelai.dev/mai
 ## 🎉 Use
 
 Please go to the manual to see [Use] (https://nb.novelai.dev/main/aidraw.html) section
+## 🌸 Thanks
+Thank you for the subdomain name provided by [Novelai Bot](https://bot.novelai.dev/). If you know more about the Koishi framework or Node.js, you can use this project.
+
+Thanks to the following developers for their contributions to the project:
+
+<a href="https://github.com/sena-nana/nonebot-plugin-novelai/graphs/contributors">
+  <img src="https://contrib.rocks/image?repo=sena-nana/nonebot-plugin-novelai" />
+</a>
