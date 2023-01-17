@@ -1,4 +1,5 @@
 # 基础优化tag
+
 BASE_TAG = "masterpiece, best quality,"
 
 # 基础排除tag
@@ -6,6 +7,8 @@ LOW_QUALITY = "lowres, bad anatomy, bad hands, text, error, missing fingers, ext
 
 # 屏蔽词
 HTAGS = "nsfw|nude|naked|nipple|blood|censored|vagina|gag|gokkun|hairjob|tentacle|oral|fellatio|areolae|lactation|paizuri|piercing|sex|footjob|masturbation|hips|penis|testicles|ejaculation|cum|tamakeri|pussy|pubic|clitoris|mons|cameltoe|grinding|crotch|cervix|cunnilingus|insertion|penetration|fisting|fingering|peeing|ass|buttjob|spanked|anus|anal|anilingus|enema|x-ray|wakamezake|humiliation|tally|futa|incest|twincest|pegging|femdom|ganguro|bestiality|gangbang|3P|tribadism|molestation|voyeurism|exhibitionism|rape|spitroast|cock|69|doggystyle|missionary|virgin|shibari|bondage|bdsm|rope|pillory|stocks|bound|hogtie|frogtie|suspension|anal|dildo|vibrator|hitachi|nyotaimori|vore|amputee|transformation|bloody"
+# 中文指令开始词
+CHINESE_COMMAND = {"绘画", "咏唱", "召唤", "约稿"}
 
 SHAPE_MAP = {
     "square": [640, 640],
@@ -18,6 +21,20 @@ SHAPE_MAP = {
     "l": [768, 512],
     "宽": [768, 512],
 }
+
+
+def aliases(*args):
+    from itertools import product
+
+    return {"".join(i) for i in product(CHINESE_COMMAND, args)}
+
+
+def cs(s: str = "", command: str = "aidraw"):
+    from nonebot import get_bot
+
+    command_start = get_bot().config.command_start
+    cmd = f"{command} {s}" if s else command
+    return "." + cmd if "" in command_start else cmd
 
 
 async def sendtosuperuser(message):
@@ -34,6 +51,6 @@ async def sendtosuperuser(message):
             **{
                 "message": message,
                 "user_id": superuser,
-            }
+            },
         )
         await asyncio.sleep(5)

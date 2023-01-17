@@ -71,6 +71,12 @@ class Config(BaseSettings):
     def __getitem__(cls, item):
         return getattr(cls, item)
 
+    @validator("novelai_site")
+    def http_start(cls, v: str):
+        if not v.startswith("http"):
+            return v
+        return "http://" + v
+
     @validator("novelai_cd", "novelai_max")
     def non_negative(cls, v: int, field: ModelField):
         if v < 1:

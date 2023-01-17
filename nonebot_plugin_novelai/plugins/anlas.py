@@ -6,9 +6,10 @@ from nonebot import on_command
 from nonebot.adapters.onebot.v11 import Bot, GroupMessageEvent, Message, MessageSegment
 from nonebot.params import CommandArg
 from nonebot.permission import SUPERUSER
+from ..utils import cs
 
 jsonpath = Path("data/novelai/anlas.json").resolve()
-setanlas = on_command("anlas")
+setanlas = on_command(cs("anlas"), aliases={"点数"}, block=True)
 
 
 @setanlas.handle()

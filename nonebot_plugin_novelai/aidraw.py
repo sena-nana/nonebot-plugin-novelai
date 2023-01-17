@@ -19,10 +19,10 @@ from nonebot.rule import ArgumentParser
 
 from .backend import AIDRAW
 from .config import config
-from .extension.anlas import anlas_check, anlas_set
-from .extension.daylimit import DayLimit
-from .extension.translation import translate
-from .utils import BASE_TAG, HTAGS, LOW_QUALITY, sendtosuperuser
+from .plugins.anlas import anlas_check, anlas_set
+from .plugins.daylimit import DayLimit
+from .utils.translation import translate
+from .utils import BASE_TAG, HTAGS, LOW_QUALITY, CHINESE_COMMAND, sendtosuperuser, cs
 from .version import version
 
 cd = {}
@@ -54,10 +54,10 @@ aidraw_parser.add_argument(
 )
 
 aidraw_matcher = on_shell_command(
-    "aidraw",
-    aliases={"绘画", "咏唱", "召唤", "约稿"},
+    cs(),
+    aliases=CHINESE_COMMAND,
     parser=aidraw_parser,
-    priority=5,
+    block=True,
 )
 
 

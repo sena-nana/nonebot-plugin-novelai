@@ -1,27 +1,16 @@
-import asyncio
 import re
-import os
-import sys
 import time
 from importlib.metadata import version
-from itertools import groupby, zip_longest
-from pathlib import Path
+from itertools import zip_longest
+
 import aiohttp
 from githubkit import GitHub
-from nonebot import on_command, get_bot
-from nonebot.adapters.onebot.v11 import Bot, MessageEvent, MessageSegment
+from nonebot import get_bot
+from nonebot.adapters.onebot.v11 import MessageSegment
 from nonebot.log import logger
-from .utils import sendtosuperuser
 
-# TODO
-check = on_command("aidraw version", aliases={"绘画版本"}, priority=5)
-update = on_command("aidraw update", aliases={"绘画更新"}, priority=5)
-help = on_command("aidraw help", aliases={"绘画帮助"}, priority=5)
-
-
-@check.handle()
-async def check_handle(bot: Bot, event: MessageEvent):
-    await check.finish(version.push_txt)
+from ..utils import sendtosuperuser
+from .utils import unpack_version
 
 
 class Version:
@@ -58,12 +47,6 @@ class Version:
                 logger.info("novelai插件检查到有新版本")
         self.lastcheck = time.time()
 
-    def unpack_version(self, s: str):
-        return [
-            int("".join(list(i))) if is_digit else "".join(list(i))
-            for is_digit, i in groupby(s, key=lambda x: x.isdigit())
-        ]
-
     async def check_last_version(self, package: str):
         async with aiohttp.ClientSession() as session:
             async with session.get("https://pypi.org/simple/" + package) as resp:
@@ -77,8 +60,8 @@ class Version:
         if new_version == curr_version:
             return False
 
-        new_versions = self.unpack_version(new_version)
-        curr_versions = self.unpack_version(curr_version)
+        new_versions = unpack_version(new_version)
+        curr_versions = unpack_version(curr_version)
 
         for new, curr in zip_longest(new_versions, curr_versions, fillvalue="0"):
             if new == curr:
@@ -107,41 +90,3 @@ class Version:
             nickname=self.package,
         )
         return message
-
-    async def install(self):
-        proc = await asyncio.create_subprocess_exec(
-            sys.executable,
-            "-m",
-            "pip",
-            "install",
-            "-U",
-            self.package,
-            stdout=asyncio.subprocess.PIPE,
-            stderr=asyncio.subprocess.PIPE,
-        )
-        _, error = await proc.communicate()
-        return bool(error)
-
-    async def reboot():
-        if sys.platform == "win32":
-            path = Path("run.bat")
-            if not path.exists():
-                boot = "call ./.venv/Scripts/activate" if Path(".venv").exists() else ""
-                with open(path, "w") as f:
-                    f.writelines([boot, "taskkill /f /im nb.exe", "nb run"])
-            os.startfile("run.bat")
-        else:
-            path = Path("run.sh")
-            if not path.exists():
-                boot = "source ./.venv/bin/activate" if Path(".venv").exists() else ""
-                with open(path, "w") as f:
-                    f.writelines([boot, "pkill nb", "nb run"])
-            os.startfile("run.sh")
-
-    """
-    async def mdrender():
-        pass
-    """
-
-
-version = Version()

@@ -5,9 +5,10 @@ from nonebot import on_command
 from nonebot.adapters.onebot.v11 import GroupMessageEvent, MessageSegment
 from nonebot.log import logger
 
-from .translation import translate
+from ..utils.translation import translate
+from ..utils import cs
 
-deepdanbooru = on_command("gettag", aliases={"鉴赏", "查书"})
+deepdanbooru = on_command(cs("tag"), aliases={"鉴赏", "查书"},block=True)
 
 
 @deepdanbooru.handle()
