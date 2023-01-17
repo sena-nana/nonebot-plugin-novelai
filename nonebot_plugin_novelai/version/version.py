@@ -1,8 +1,8 @@
 import re
 import time
-from importlib.metadata import version
+import sys
+from importlib.metadata import version as vs
 from itertools import zip_longest
-
 import aiohttp
 from githubkit import GitHub
 from nonebot import get_bot
@@ -14,7 +14,7 @@ from .utils import unpack_version
 
 
 class Version:
-    version: str  # 当前版本
+    version: str = ""
     lastcheck: float = 0  # 上次检查时间
     ispushed: bool = True  # 是否已经推送
     latest: str = "0.0.0"  # 最新版本
@@ -22,9 +22,9 @@ class Version:
     url = "https://nb.novelai.dev"
 
     def __init__(self):
-        try:
-            self.version = version(self.package)
-        except:
+        if self.package in sys.modules:
+            self.version = vs(self.package)
+        else:
             self.version = "0.6.0"
 
     async def check_update(self):

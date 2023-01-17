@@ -1,15 +1,18 @@
 import asyncio
 import os
 import sys
+from importlib.metadata import version as vs
 from pathlib import Path
 from .version import Version
-from nonebot import on_command
-from nonebot.adapters.onebot.v11 import Bot, MessageEvent
+from nonebot import on_command, get_driver
 from nonebot.permission import SUPERUSER
 from nonebot.log import logger
-from ..utils import cs, aliases
+from ..utils import cs, aliases, sendtosuperuser
 
-version = Version()
+ver = Version()
+driver = get_driver()
+nickname = driver.config.nickname.pop() if driver.config.nickname else ver.package
+
 check = on_command(cs("version"), aliases=aliases("版本"), priority=5)
 update = on_command(
     cs("update"), aliases=aliases("更新"), permission=SUPERUSER, priority=5
@@ -20,11 +23,26 @@ reboot = on_command(
 
 
 @check.handle()
-async def check_handle(bot: Bot, event: MessageEvent):
-    await version.check_update()
-    if version.version == version.latest:
-        await check.finish(f"当前nonebot-plugin-novelai版本为{version.version}\n已经是最新版本了~")
-    await check.finish(version.push_txt)
+async def check_handle():
+    await ver.check_update()
+    if ver.version == ver.latest:
+        await check.finish(f"当前{ver.package}版本为{ver.version}\n已经是最新版本了~")
+    else:
+        await check.finish(f"当前{ver.package}版本为{ver.version}\n最新版本{ver.latest}~")
+
+
+@update.handle()
+async def update_handle():
+    if ver.version == ver.latest:
+        await update.finish("已经是最新版本了不需要更新哦~")
+    else:
+        if vs(ver.package) == ver.latest:
+            await update.finish(f"插件已经更新过了，正在等待重启~\n请使用aidraw reboot命令重启{nickname}~")
+        await update.send("正在更新中~")
+        if await install():
+            await update.send("更新失败，请手动更新~")
+        else:
+            await update.send(f"更新成功~请使用aidraw reboot命令重启{nickname}~")
 
 
 async def install():
@@ -34,7 +52,7 @@ async def install():
         "pip",
         "install",
         "-U",
-        version.package,
+        ver.package,
         stdout=asyncio.subprocess.PIPE,
         stderr=asyncio.subprocess.PIPE,
     )
@@ -44,6 +62,7 @@ async def install():
 
 @reboot.handle()
 async def reboot_handle():
+    await reboot.send(f"{nickname}正在重启中~")
     if sys.platform == "win32":
         path = Path("run.bat")
         if not path.exists():
@@ -70,3 +89,9 @@ async def reboot_handle():
             with open(path, "w") as f:
                 f.writelines([boot, "pkill nb", "nb run"])
         os.startfile("run.sh")
+    await reboot.send(f"{nickname}重启失败了！")
+
+
+@driver.on_bot_connect
+async def on_start():
+    await sendtosuperuser(f"{nickname}启动完成")
