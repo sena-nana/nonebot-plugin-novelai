@@ -267,3 +267,7 @@ docs/.vuepress/.cache/
 docs/.vuepress/.temp/
 docs/.vuepress/dist/
 node_modules
+
+setup.bat
+test*
+.VSCodeCounter
