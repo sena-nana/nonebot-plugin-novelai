@@ -56,7 +56,7 @@ class Config(BaseSettings):
     def paid(cls, v: int, field: ModelField):
         if v < 0:
             return field.default
-        elif v > 2:
+        elif v > 3:
             return field.default
         return v
 

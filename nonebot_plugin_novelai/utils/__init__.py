@@ -41,8 +41,7 @@ async def sendtosuperuser(message):
 
 async def png2jpg(raw: bytes):
     raw:BytesIO = BytesIO(base64.b64decode(raw))
-    img_PIL = Image.open(raw)
-    img_PIL.convert("RGB")
+    img_PIL = Image.open(raw).convert("RGB")
     image_new = BytesIO()
     img_PIL.save(image_new, format="JPEG", quality=95)
     image_new=image_new.getvalue()
