@@ -6,7 +6,9 @@ tag:
   - Markdown
 ---
 
-### 使用 nb-cli 安装 (推荐)
+
+<details>
+<summary>使用 nb-cli 安装 (推荐)</summary>
 
 1. 在 nonebot2 项目的根目录下打开终端
 2. 如果你是 Windows 用户，输入`./.venv/Scripts/activate`并回车，如果你是 Linux 用户，输入`source ./.venv/bin/activate`并回车。你应该能够看到终端在新的一行激活了虚拟环境。如果你使用旧版 nb-cli 创建的项目不存在.venv 文件夹，则跳过此步骤
@@ -17,7 +19,9 @@ tag:
 nb plugin install nonebot-plugin-novelai
 ```
 
-### 使用包管理器安装
+</details>
+<details>
+<summary>使用包管理器安装</summary>
 
 1. 在 nonebot2 项目的根目录下, 打开终端
 2. 如果你是 Windows 用户，输入`./.venv/Scripts/activate`并回车，如果你是 Linux 用户，输入`source ./.venv/bin/activate`并回车。你应该能够看到终端在新的一行激活了虚拟环境。如果你使用旧版 nb-cli 创建的项目不存在.venv 文件夹，则跳过此步骤
@@ -50,7 +54,9 @@ nb plugin install nonebot-plugin-novelai
 
 4. 打开 nonebot2 项目的 `pyproject.toml` 文档, 在其中名为 **plugins** 的列表中，加入"nonebot-plugin-novelai"
 
-### 下载源码安装 (不推荐)
+</details>
+<details>
+<summary>下载源码安装 (不推荐)</summary>
 
 > 除非你对自己解决问题的能力有信心，并且有着修改插件的需求，否则你不应该选择这种方法。这种方法无法通过以上两种方法更新版本，并会与插件内置的更新功能冲突
 
@@ -68,3 +74,5 @@ pip install -r requirements.txt
 ```
 
 7. 现在你可以删除**requirements.txt**文件了
+
+</details>

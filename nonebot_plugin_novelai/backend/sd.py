@@ -1,8 +1,8 @@
-from .base import AIDRAW_BASE
 from ..config import config
+from .base import DrawBase
 
 
-class AIDRAW(AIDRAW_BASE):
+class Draw(DrawBase):
     """队列中的单个请求"""
 
     sampler: str = "k_euler_ancestral"
@@ -35,7 +35,7 @@ class AIDRAW(AIDRAW_BASE):
                 "override_settings": {
                     "filter_nsfw": True if config.novelai_h else False,
                     "CLIP_stop_at_last_layers": 2,
-                    "sd_model_checkpoint": ""
+                    "sd_model_checkpoint": "",
                 },
             }
             if self.img2img:

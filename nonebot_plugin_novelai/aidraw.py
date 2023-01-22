@@ -17,12 +17,12 @@ from nonebot.params import ShellCommandArgs
 from nonebot.permission import SUPERUSER
 from nonebot.rule import ArgumentParser
 
-from .backend import AIDRAW
+from .backend import Draw
 from .config import config
 from .plugins.anlas import anlas_check, anlas_set
 from .plugins.daylimit import DayLimit
+from .utils import BASE_TAG, CHINESE_COMMAND, HTAGS, LOW_QUALITY, cs, sendtosuperuser
 from .utils.translation import translate
-from .utils import BASE_TAG, HTAGS, LOW_QUALITY, CHINESE_COMMAND, sendtosuperuser, cs
 from .version import version
 
 cd = {}
@@ -100,7 +100,7 @@ async def aidraw_get(
         # 初始化参数
         args.tags = await prepocess_tags(args.tags)
         args.ntags = await prepocess_tags(args.ntags)
-        aidraw = AIDRAW(user_id=user_id, group_id=group_id, **vars(args))
+        aidraw = Draw(user_id=user_id, group_id=group_id, **vars(args))
         # 检测是否有18+词条
         if not config.novelai_h:
             pattern = re.compile(f"(\s|,|^)({HTAGS})(\s|,|$)")
@@ -171,12 +171,12 @@ def wait_len():
     return list_len
 
 
-async def fifo_gennerate(aidraw: AIDRAW = None):
+async def fifo_gennerate(aidraw: Draw = None):
     # 队列处理
     global gennerating
     bot: Bot = get_bot()
 
-    async def generate(aidraw: AIDRAW):
+    async def generate(aidraw: Draw):
         id = aidraw.user_id if config.novelai_antireport else bot.self_id
         resp = await bot.get_group_member_info(
             group_id=aidraw.group_id, user_id=aidraw.user_id
@@ -247,7 +247,7 @@ async def fifo_gennerate(aidraw: AIDRAW = None):
         await version.check_update()
 
 
-async def _run_gennerate(aidraw: AIDRAW):
+async def _run_gennerate(aidraw: Draw):
     # 处理单个请求
     try:
         await aidraw.run()
@@ -274,8 +274,6 @@ async def _run_gennerate(aidraw: AIDRAW):
 
 async def prepocess_tags(tags: list[str]):
     tags: str = "".join([i + " " for i in tags if isinstance(i, str)])
-    # 处理奇奇怪怪的输入
-    tags = re.sub("[\f\n\r\t\v?<>\\/*\|:]", "", tags)
     # 去除CQ码
     tags = re.sub("\[CQ[^\s]*?]", "", tags)
     # 检测中文
@@ -296,11 +294,12 @@ async def prepocess_tags(tags: list[str]):
     return tags_
 
 
-async def save_img(request, img_bytes: bytes, extra: str = "unknown"):
+async def save_img(request, img_bytes: bytes, extra: str = ""):
     # 存储图片
     path = Path("data/novelai/output").resolve()
     if config.novelai_save:
-        path_ = path / extra
+        if extra:
+            path_ = path / extra
         path_.mkdir(parents=True, exist_ok=True)
         hash = hashlib.md5(img_bytes).hexdigest()
         file = (path_ / hash).resolve()

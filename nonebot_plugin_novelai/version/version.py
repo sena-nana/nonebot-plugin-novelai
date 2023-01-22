@@ -31,21 +31,22 @@ class Version:
         """检查更新，并推送"""
         # 每日检查
         if time.time() - self.lastcheck > 80000:
-            await self._check()
+            await self.check()
         # 如果没有推送，则启动推送流程
         if not self.ispushed:
-            bot = get_bot()
             await sendtosuperuser(await self.push_txt())
+            self.lastcheck = time.time()
             self.ispushed = True
 
-    async def _check(self):
+    async def check(self):
         update = await self.check_last_version(self.package)
         if self.is_newer(update, self.latest):
             self.latest = update
             if self.is_newer(self.latest):
                 self.ispushed = False
-                logger.info("novelai插件检查到有新版本")
-        self.lastcheck = time.time()
+                logger.info(f"novelai插件检查到有新版本{self.latest}")
+                return False
+        return True
 
     async def check_last_version(self, package: str):
         async with aiohttp.ClientSession() as session:

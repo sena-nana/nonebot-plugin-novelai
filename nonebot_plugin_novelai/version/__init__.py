@@ -24,8 +24,7 @@ reboot = on_command(
 
 @check.handle()
 async def check_handle():
-    await ver.check_update()
-    if ver.version == ver.latest:
+    if await ver.check():
         await check.finish(f"当前{ver.package}版本为{ver.version}\n已经是最新版本了~")
     else:
         await check.finish(f"当前{ver.package}版本为{ver.version}\n最新版本{ver.latest}~")
@@ -33,10 +32,10 @@ async def check_handle():
 
 @update.handle()
 async def update_handle():
-    if ver.version == ver.latest:
+    if await ver.check():
         await update.finish("已经是最新版本了不需要更新哦~")
     else:
-        if vs(ver.package) == ver.latest:
+        if ver.package in sys.modules and vs(ver.package) == ver.latest:
             await update.finish(f"插件已经更新过了，正在等待重启~\n请使用aidraw reboot命令重启{nickname}~")
         await update.send("正在更新中~")
         if await install():

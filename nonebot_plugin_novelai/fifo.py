@@ -1,7 +1,7 @@
 import asyncio
 import time
 
-from .backend import AIDRAW
+from .backend import Draw
 
 
 class MODEL:
@@ -23,7 +23,7 @@ class MODEL:
 
     async def run_(self):
         if not self.running:
-            aidraw: AIDRAW = await self.queue.get()
+            aidraw: Draw = await self.queue.get()
             self.generating = True
             try:
                 await aidraw.run()
@@ -33,7 +33,7 @@ class MODEL:
             self.generating = False
             self.queue.task_done()
 
-    async def run(self, aidraw: AIDRAW):
+    async def run(self, aidraw: Draw):
         signal = asyncio.Event()
         aidraw.signal = signal
         await self.queue.put(aidraw)
@@ -65,7 +65,7 @@ class FIFO:
         else:
             return 999
 
-    async def run(self, aidraw: AIDRAW):
+    async def run(self, aidraw: Draw):
         if aidraw.model:
             pass
         else:
@@ -79,7 +79,7 @@ class FIFO:
                 # self.backends.remove(minback)
                 pass
 
-    async def run(self, aidraw: AIDRAW, model):
+    async def run(self, aidraw: Draw, model):
         pass
 
     async def get_models(self):

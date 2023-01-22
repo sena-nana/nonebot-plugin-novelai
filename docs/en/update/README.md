@@ -35,8 +35,8 @@ icon: creative
 - [ ] 支持其他适配器
 - [ ] 管理员无 CD
 - [ ] 修复指令匹配非开头也会匹配上的问题
-- [x] 修复-r绕过分辨率检测的问题
-- [ ] 加入gradio管理界面
+- [x] 修复-r 绕过分辨率检测的问题
+- [ ] 加入 gradio 管理界面
 - [ ] 设置特定词不翻译
 
 # 0.5.X
@@ -74,8 +74,8 @@ icon: creative
 
 ### 新功能
 
-- 现在将 FIFO 更名为 AIDRAW，并且开放给其他插件，该类中包含了所有生成图片核心的部分（不包含预处理，翻译等），可以用于制作扩展
-  - 使用**from nonebot_plugin_novelai import AIDRAW**导入
+- 现在将 FIFO 更名为 Draw，并且开放给其他插件，该类中包含了所有生成图片核心的部分（不包含预处理，翻译等），可以用于制作扩展
+  - 使用**from nonebot_plugin_novelai import Draw**导入
 - 把说明书的使用方法部分写完了
 
 ### 更改

@@ -13,7 +13,7 @@ from ..config import config
 from ..utils import SHAPE_MAP
 
 
-class AIDRAW_BASE:
+class DrawBase:
     max_resolution: int = 16
     sampler: str
 

@@ -1,8 +1,8 @@
 from ..config import config
-from .base import AIDRAW_BASE
+from .base import DrawBase
 
 
-class AIDRAW(AIDRAW_BASE):
+class Draw(DrawBase):
     """队列中的单个请求"""
 
     async def run(self):
