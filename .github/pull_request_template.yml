@@ -1,0 +1,68 @@
+name: 🔀 和并请求 (Pull Request)
+description: 合并的代码中包含了对已知错误的修复
+assignees:
+  - Sena-nana
+body:
+  - type: markdown
+    attributes:
+      value: |
+        ### ⚠️注意事项
+        如果你的 PR 包含了多个修复/功能增减，请将你的 PR 分割成独立的多个 PR 提交，每个 PR 仅包含一个内容实现
+
+        请善用 Github 的多 Branch 开发和 Git 的 Cherry Pick 功能
+
+        如果你的 PR 尚未完全完成，请将 PR 标记为 Draft 状态
+
+  - type: dropdown
+    id: checklist
+    attributes:
+      label: 这个 PR 带来了怎样的更改
+      multiple: true
+      options:
+        - 错误修复
+        - 新功能
+        - 文档/注释变更
+        - 代码重构
+        - 测试用例优化
+        - 性能优化
+        - 交互优化
+        - 依赖变化
+        - 未列出的更改类型
+    validations:
+      required: true
+  - type: dropdown
+    id: break
+    attributes:
+      label: 这个PR是否存在会导致原本使用方法失效的破坏性变更
+      options:
+        - 是，并且我确保已经得到了Sena-nana的同意
+        - 否
+    validations:
+      required: true
+  - type: textarea
+    id: what_happend
+    attributes:
+      label: 请清晰准确地描述你所做的更改
+    validations:
+      required: true
+  - type: textarea
+    id: why
+    attributes:
+      label: 你的 PR 解决了什么问题
+      description: "如果你解决的是issue中存在的问题(例如#1和#2)，可以使用resolve #1 #2来自动关联"
+      value: "resolve #"
+    validations:
+      required: true
+  - type: checkbox
+    id: lastcheck
+    attributes:
+      label: 最终检查
+      options:
+        - 我对我的代码进行了注释，特别是在难以理解的部分
+        - 我的更改需要更新文档，并且已对文档进行了相应的更改
+        - 我添加了测试并且已经在本地通过，以证明我的修复补丁或新功能有效
+        - 我已检查并确保更改没有与其他打开的 Pull Requests 重复
+  - type: textarea
+    id: other
+    attributes:
+      label: 其他信息
