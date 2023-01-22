@@ -4,3 +4,4 @@ nonebot2>=2.0.0b4
 aiofiles>=22.1.0
 pillow>=9.2.0
 githubkit>=0.9.4
+mistune>=2.0.0
