@@ -6,7 +6,8 @@ class Draw(DrawBase):
     """队列中的单个请求"""
 
     sampler: str = "k_euler_ancestral"
-    max_resolution: int = 32
+    MAX_RESOLUTION: int = 32
+    MAX_STEPS: int = 200
 
     async def fromresp(self, resp):
         img: dict = await resp.json()

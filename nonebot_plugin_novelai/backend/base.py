@@ -14,8 +14,9 @@ from ..utils import SHAPE_MAP
 
 
 class DrawBase:
-    max_resolution: int = 16
+    MAX_RESOLUTION: int = 16
     sampler: str
+    MAX_STEPS: int = 50
 
     def __init__(
         self,
@@ -79,7 +80,9 @@ class DrawBase:
         self.image: str = None
         self.width, self.height = self.extract_shape(shape)
         # 数值合法检查
-        if self.steps <= 0 or self.steps > (50 if config.novelai_paid else 28):
+        if self.steps <= 0 or self.steps > (
+            self.MAX_STEPS if config.novelai_paid else 28
+        ):
             self.steps = 28
         if self.strength < 0 or self.strength > 1:
             self.strength = 0.7
@@ -178,8 +181,8 @@ class DrawBase:
                 height: float = config.novelai_size / pow(ratio, 0.5)
                 width: float = height * ratio
         base = round(max(width, height) / 64)
-        if base > self.max_resolution:
-            base = self.max_resolution
+        if base > self.MAX_RESOLUTION:
+            base = self.MAX_RESOLUTION
         if width <= height:
             return (round(width / height * base) * 64, 64 * base)
         else:
