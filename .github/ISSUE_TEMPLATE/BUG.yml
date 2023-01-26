@@ -26,9 +26,9 @@ body:
       label: 报告清单
       description: 请确认您已遵守所有必选项。
       options:
-        - 我已仔细阅读并了解上述注意事项
-        - 我已使用最新版本测试过，确认问题依旧存在
-        - 我确定在 GitHub Issues 中没有相同或相似的问题
+        - label: 我已仔细阅读并了解上述注意事项
+        - label: 我已使用最新版本测试过，确认问题依旧存在
+        - label: 我确定在 GitHub Issues 中没有相同或相似的问题
     validations:
       required: true
   - type: input
