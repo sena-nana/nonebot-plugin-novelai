@@ -1,19 +1,27 @@
 import { defineUserConfig } from "vuepress";
 import theme from "./theme";
-import { searchPlugin } from "@vuepress/plugin-search";
+import { searchProPlugin } from "vuepress-plugin-search-pro";
 export default defineUserConfig({
-    lang: "zh-CN",
-    title: "nonebot-plugin-novelai",
-    description: "基于Nonebot的novelai使用说明书",
+  locales: {
+    "/": { lang: "zh-CN" },
+    "/en/": { lang: "en-US" },
+  },
+
+  title: "nonebot-plugin-novelai",
+  description: "基于Nonebot的novelai使用说明书",
   theme,
   shouldPrefetch: false,
-  plugins:[
-    searchPlugin({
+  plugins: [
+    searchProPlugin({
       locales: {
-        '/': {
-          placeholder: '搜索',
-        },},
-      isSearchable: (page) => page.path !== '/',   
+        "/": {
+          placeholder: "搜索",
+        },
+        "/en/": {
+          placeholder: "Search",
+        },
+      },
+      indexContent: true,
     }),
   ],
 });

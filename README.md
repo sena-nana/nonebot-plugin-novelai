@@ -1,79 +1,71 @@
-# 支持中文关键词的基于nonebot2的AI绘图插件
-插件讨论反馈群：687904502
-说明书：https://nb.novelai.dev
+<div align="center">
+  <a href="https://nb.novelai.dev"><img src="imgs/head.jpg" width="180" height="180" alt="NoneBot-plugin-novelai" style="border-radius:100%; overflow:hidden;"></a>
+  <br>
+</div>
 
-如果你是koishi框架的用户或者更熟悉Node.js，请出门左转[Novelai Bot](https://bot.novelai.dev/)
+<div align="center">
 
-环境需求：
-- Python>=3.8
-- nonebot2>=b4
-## 依赖
-aiohttp,aiofiles
+# Nonebot-plugin-novelai
 
-## 简要说明
-该插件允许在nonebot2前端软件中使用ai绘图，支持的后端为novalai官方，naifu和webui
+_✨ 中文输入、对接 webui、以及你能想到的大部分功能 ✨_
 
-novelai模式需要token才能运行，所以你需要首先购买novelai的25刀套餐（25刀套餐支持无限生成）。其他套餐也支持，但是会扣费。
-## 指令示例
+[讨论群](https://jq.qq.com/?_wv=1027&k=pT3Mn4jG)|[说明书](https://nb.novelai.dev)|[整合包]()|[ENGLISH](./README_EN.md)
 
-.aidraw loli,cute --ntags big breast --seed 114514
-- 指令使用shell解析输入的参数
-- square为指定画幅，支持简写为s，其他画幅为portrait和landscape，同样支持简写，默认为portrait
-- seed若省略则为自动生成
-- 词条使用英文，使用逗号（中英都行，代码里有转换）分割，中文会自动机翻为英文，不支持其他语种
-- 如果你不想用.aidraw，可以用 **绘画** 、 **咏唱** 或 **召唤** 代替。
-- 在消息中添加图片或者回复带有图片的消息自动切换为以图生图模式
+<a href="./LICENSE">
+    <img src="https://img.shields.io/github/license/sena-nana/nonebot-plugin-novelai" alt="license">
+</a>
+<a href="https://pypi.python.org/pypi/nonebot-plugin-novelai">
+    <img src="https://img.shields.io/pypi/v/nonebot-plugin-novelai" alt="pypi">
+</a>
+<img src="https://img.shields.io/badge/python-3.8+-blue.svg" alt="python">
 
-.aidraw on/off
-- 启动/关闭本群的aidraw
+</div>
 
-.anlas check
-- 查看自己拥有的点数
+## 📖 功能介绍
 
-.anlas
-- 查看帮助
+- AI 绘画
+  - 支持 CD 限速和绘画队列
+  - 支持高级请求语法
+  - 内置翻译 Api，自动翻译中文
+  - 内置屏蔽词，可设置全局词条和排除词条
+  - 返回消息支持简洁模式和详细模式
+  - 模拟官方的点数管理模式，并能够按用户限制总额和每日使用量
+  - 支持多后端负载均衡(Todo)
+  - 支持自定义回复格式(Todo)
+- 管理
+  - 支持群黑白名单
+  - 提供了管理指令用于运行时修改部分设置
+  - Web 管理界面(Todo)
+- 支持后端
+  - novelai 官网
+  - naifu
+  - stable diffusion webui(本地，远程 or colab)
+  - 另一个 novelai 插件(Todo)
+  - 由第三方扩展的后端
+- 扩展功能
+  - 查询图片 TAG
+  - 由第三方实现的扩展
+- 自我管理
+  - 版本检查和更新提醒，支持插件热更新和自动重启
+  - 内置简易权限管理，被封退群，加群管理(Todo)
 
-.anlas [数字] @[某人]
-- 将自己的点数分给别人(superuser点数无限)
+## 💿 安装
+请前往说明书查看[安装](https://nb.novelai.dev/main/install.html)一节
 
-.tagget [图片]
-- 获取图片的TAG
-- 如果你不想用.tagget，可以用 **鉴赏** 或 **查书** 代替。
+## ⚙️ 配置
 
-## FEATURE
-- NAIFU
-    - [x] 支持文本生图
-    - [x] 支持以图生图
-- WEBUI
-    - [x] 支持文本生图
-    - [x] 支持以图生图
-- NOVELAI
-    - [x] 支持文本生图
-    - [x] 支持以图生图
-- OTHERS
-    - 群聊管理
-        - [x] 支持分群设置
-    - 速度限制
-        - [x] 支持内置CD和并行限制
-        - [x] 付费点数制
-        - [x] 严格点数制
-        - [x] 每日上限制
-    - 娱乐功能
-        - [x] 支持查询图片词条
-        - [ ] 随机少女
-        - [ ] 内置咒语集
-        - [ ] 支持数据统计
-    - 命令处理（需要重构）
-        - [x] 支持文字生图画幅指定，种子指定
-        - [x] 支持输入排除词条
-        - [x] 支持批量生成
-    - 命令优化
-        - [x] 内置优化词条模板并自动使用
-        - [x] 支持管理员塞私货
-        - [x] 支持机翻词条为英文
-    - [x] 生成图片自动保存至data/novelai文件夹
-    - [x] 支持开关禁止nsfw
-    - [x] 更新提醒
-    - [ ] 支持i18n
-    - [ ] 支持多台后端负载均衡
-    - [ ] 说明书
+请前往说明书查看[全局配置](https://nb.novelai.dev/main/config.html)一节
+
+## 🎉 使用
+
+请前往说明书查看[使用](https://nb.novelai.dev/main/aidraw.html)一节
+
+## 🌸 致谢
+
+感谢[Novelai Bot](https://bot.novelai.dev/)提供的子域名，如果你更了解 Koishi 框架或是 Node.js，可以使用这个项目
+
+感谢以下开发者对该项目做出的贡献：
+
+<a href="https://github.com/sena-nana/nonebot-plugin-novelai/graphs/contributors">
+  <img src="https://contrib.rocks/image?repo=sena-nana/nonebot-plugin-novelai" />
+</a>

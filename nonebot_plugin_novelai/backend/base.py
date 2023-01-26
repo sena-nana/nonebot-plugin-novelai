@@ -10,13 +10,13 @@ from nonebot.log import logger
 from PIL import Image
 
 from ..config import config
-from ..utils import png2jpg
-from ..utils.data import shapemap
+from ..utils import SHAPE_MAP
 
 
-class AIDRAW_BASE:
-    max_resolution: int = 16
+class DrawBase:
+    MAX_RESOLUTION: int = 16
     sampler: str
+    MAX_STEPS: int = 50
 
     def __init__(
         self,
@@ -80,7 +80,9 @@ class AIDRAW_BASE:
         self.image: str = None
         self.width, self.height = self.extract_shape(shape)
         # 数值合法检查
-        if self.steps <= 0 or self.steps > (50 if config.novelai_paid else 28):
+        if self.steps <= 0 or self.steps > (
+            self.MAX_STEPS if config.novelai_paid else 28
+        ):
             self.steps = 28
         if self.strength < 0 or self.strength > 1:
             self.strength = 0.7
@@ -104,9 +106,9 @@ class AIDRAW_BASE:
                 if width.isdigit() and height.isdigit():
                     return self.shape_set(int(width), int(height))
                 else:
-                    return shapemap.get(shape)
+                    return SHAPE_MAP.get(shape)
             else:
-                return shapemap.get(shape)
+                return SHAPE_MAP.get(shape)
         else:
             return (512, 768)
 
@@ -179,8 +181,8 @@ class AIDRAW_BASE:
                 height: float = config.novelai_size / pow(ratio, 0.5)
                 width: float = height * ratio
         base = round(max(width, height) / 64)
-        if base > self.max_resolution:
-            base = self.max_resolution
+        if base > self.MAX_RESOLUTION:
+            base = self.MAX_RESOLUTION
         if width <= height:
             return (round(width / height * base) * 64, 64 * base)
         else:
@@ -205,15 +207,23 @@ class AIDRAW_BASE:
 
                 # 将图片转化为jpg
                 if config.novelai_save == 1:
-                    image_new = await png2jpg(img)
+                    image_new = await self.png2jpg(img)
                 else:
                     image_new = base64.b64decode(img)
         self.result.append(image_new)
         return image_new
 
-    async def fromresp(self, resp):
+    async def png2jpg(raw: bytes):
+        raw: BytesIO = BytesIO(base64.b64decode(raw))
+        img_PIL = Image.open(raw).convert("RGB")
+        image_new = BytesIO()
+        img_PIL.save(image_new, format="JPEG", quality=95)
+        image_new = image_new.getvalue()
+        return image_new
+
+    async def fromresp(self, resp: aiohttp.ClientResponse):
         """
-        处理请求的返回内容，不要直接调用，请使用post函数
+        处理请求的返回内容，并返回一个base64编码的图片str
         """
         img: str = await resp.text()
         return img.split("data:")[1]

@@ -127,13 +127,10 @@ dmypy.json
 
 # Pyre type checker
 .pyre/
-
-setup.py
-test/
 .pdm.toml
 pdm.lock
 pyproject.toml
-test.*
+test*.*
 # Logs
 logs
 *.log
@@ -267,7 +264,13 @@ docs/.vuepress/.cache/
 docs/.vuepress/.temp/
 docs/.vuepress/dist/
 node_modules
-
+test*.py
 setup.bat
-test*
+__backup__
+nonebot_plugin_novelai.zip
+node_modules/
+docs/.vuepress/.cache/
+docs/.vuepress/.temp/
+docs/.vuepress/dist/
+pnpm-lock.yaml
 .VSCodeCounter

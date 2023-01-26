@@ -1,11 +1,13 @@
-from ..config import config, nickname
-from ..utils.save import save_img
-from io import BytesIO
-import base64
-import aiohttp
 import asyncio
+import base64
+from io import BytesIO
+
+import aiohttp
 from nonebot.adapters.onebot.v11 import MessageSegment
 from nonebot.log import logger
+
+from ..config import config, nickname
+from ..utils.save import save_img
 
 
 async def check_safe_method(fifo, img_bytes, message):
@@ -41,8 +43,10 @@ async def check_safe(img_bytes: BytesIO):
     for i in range(3):
         async with aiohttp.ClientSession() as session:
             # 调用API
-            async with session.post('https://hf.space/embed/mayhug/rainchan-image-porn-detection/api/predict/',
-                                    json={"data": [str0]}) as resp:
+            async with session.post(
+                "https://hf.space/embed/mayhug/rainchan-image-porn-detection/api/predict/",
+                json={"data": [str0]},
+            ) as resp:
                 if resp.status == 200:
                     jsonresult = await resp.json()
                     break

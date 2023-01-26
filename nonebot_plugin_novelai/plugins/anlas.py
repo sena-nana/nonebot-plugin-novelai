@@ -1,25 +1,32 @@
-from pathlib import Path
 import json
+from pathlib import Path
+
 import aiofiles
-from nonebot.adapters.onebot.v11 import Bot,GroupMessageEvent, Message, MessageSegment
-from nonebot.permission import SUPERUSER
+from nonebot import on_command
+from nonebot.adapters.onebot.v11 import Bot, GroupMessageEvent, Message, MessageSegment
 from nonebot.params import CommandArg
-from nonebot import on_command, get_driver
+from nonebot.permission import SUPERUSER
+from ..utils import cs
 
 jsonpath = Path("data/novelai/anlas.json").resolve()
-setanlas = on_command(".anlas")
+setanlas = on_command(cs(command="anlas"), aliases={"点数"}, block=True)
+
 
 @setanlas.handle()
-async def anlas_handle(bot:Bot,event: GroupMessageEvent, args: Message = CommandArg()):
+async def anlas_handle(
+    bot: Bot, event: GroupMessageEvent, args: Message = CommandArg()
+):
     atlist = []
     user_id = str(event.user_id)
     for seg in event.original_message["at"]:
         atlist.append(seg.data["qq"])
     messageraw = args.extract_plain_text().strip()
     if not messageraw or messageraw == "help":
-        await setanlas.finish(f"点数计算方法(四舍五入):分辨率*数量*强度/45875\n.anlas+数字+@某人 将自己的点数分给对方\n.anlas check 查看自己的点数")
+        await setanlas.finish(
+            f"点数计算方法(四舍五入):分辨率*数量*强度/45875\n.anlas+数字+@某人 将自己的点数分给对方\n.anlas check 查看自己的点数"
+        )
     elif messageraw == "check":
-        if await SUPERUSER(bot,event):
+        if await SUPERUSER(bot, event):
             await setanlas.finish(f"Master不需要点数哦")
         else:
             anlas = await anlas_check(user_id)
@@ -30,16 +37,20 @@ async def anlas_handle(bot:Bot,event: GroupMessageEvent, args: Message = Command
             anlas_change = int(messageraw)
             if anlas_change > 1000:
                 await setanlas.finish(f"一次能给予的点数不超过1000")
-            if await SUPERUSER(bot,event):
+            if await SUPERUSER(bot, event):
                 _, result = await anlas_set(at, anlas_change)
-                message = f"分配完成：" + \
-                    MessageSegment.at(at)+f"的剩余点数为{result}"
+                message = f"分配完成：" + MessageSegment.at(at) + f"的剩余点数为{result}"
             else:
                 result, user_anlas = await anlas_set(user_id, -anlas_change)
                 if result:
                     _, at_anlas = await anlas_set(at, anlas_change)
-                    message = f"分配完成：\n"+MessageSegment.at(
-                        user_id)+f"的剩余点数为{user_anlas}\n"+MessageSegment.at(at)+f"的剩余点数为{at_anlas}"
+                    message = (
+                        f"分配完成：\n"
+                        + MessageSegment.at(user_id)
+                        + f"的剩余点数为{user_anlas}\n"
+                        + MessageSegment.at(at)
+                        + f"的剩余点数为{at_anlas}"
+                    )
                     await setanlas.finish(message)
                 else:
                     await setanlas.finish(f"分配失败：点数不足，你的剩余点数为{user_anlas}")
@@ -53,7 +64,7 @@ async def anlas_handle(bot:Bot,event: GroupMessageEvent, args: Message = Command
 async def anlas_check(user_id):
     if not jsonpath.exists():
         jsonpath.parent.mkdir(parents=True, exist_ok=True)
-        async with aiofiles.open(jsonpath, "w+")as f:
+        async with aiofiles.open(jsonpath, "w+") as f:
             await f.write("{}")
     async with aiofiles.open(jsonpath, "r") as f:
         jsonraw = await f.read()
@@ -64,7 +75,7 @@ async def anlas_check(user_id):
 
 async def anlas_set(user_id, change):
     oldanlas = await anlas_check(user_id)
-    newanlas = oldanlas+change
+    newanlas = oldanlas + change
     if newanlas < 0:
         return False, oldanlas
     anlasdict = {}

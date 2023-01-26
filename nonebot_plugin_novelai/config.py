@@ -1,50 +1,81 @@
 import json
 from pathlib import Path
 
+# from .fifo import FIFO
 import aiofiles
 from nonebot import get_driver
 from nonebot.log import logger
 from pydantic import BaseSettings, validator
 from pydantic.fields import ModelField
 
+driver = get_driver()
 jsonpath = Path("data/novelai/config.json").resolve()
-nickname = list(get_driver().config.nickname)[0] if len(
-    get_driver().config.nickname) else "nonebot-plugin-novelai"
+nickname = (
+    list(driver.config.nickname)[0]
+    if len(driver.config.nickname)
+    else "nonebot-plugin-novelai"
+)
 
 
 class Config(BaseSettings):
-    # 服务器设置
-    novelai_token: str = ""  # 官网的token
-    # novelai: dict = {"novelai":""}# 你的服务器地址（包含端口），不包含http头，例:127.0.0.1:6969
-    novelai_mode: str = "novelai"
-    novelai_site: str = ""
-    # 后台设置
-    novelai_save: int = 1  # 是否保存图片至本地,0为不保存，1保存，2同时保存追踪信息
-    novelai_paid: int = 0  # 0为禁用付费模式，1为点数制，2为不限制
-    novelai_pure: bool = False  # 是否启用简洁返回模式（只返回图片，不返回tag等数据）
-    novelai_limit: bool = True  # 是否开启限速
-    novelai_daylimit: int = 0  # 每日次数限制，0为禁用
-    novelai_h: bool = False  # 是否允许H
-    novelai_antireport: bool = True  # 玄学选项。开启后，合并消息内发送者将会显示为调用指令的人而不是bot
-    novelai_max: int = 3  # 每次能够生成的最大数量
-    # 允许生成的图片最大分辨率，对应(值)^2.默认为1024（即1024*1024）。如果服务器比较寄，建议改成640（640*640）或者根据能够承受的情况修改。naifu和novelai会分别限制最大长宽为1024
-    novelai_size: int = 1024
-    # 可运行更改的设置
-    novelai_tags: str = ""  # 内置的tag
-    novelai_ntags: str = ""  # 内置的反tag
-    novelai_cd: int = 60  # 默认的cd
-    novelai_on: bool = True  # 是否全局开启
-    novelai_revoke: int = 0  # 是否自动撤回，该值不为0时，则为撤回时间
-    # 翻译API设置
-    bing_key: str = None  # bing的翻译key
-    deepl_key: str = None  # deepL的翻译key
+    novelai: dict = {"novelai": ""}
+    """你的服务器配置信息"""
 
-    # 允许单群设置的设置
+    novelai_save: int = 1
+    """是否保存图片至本地,0为不保存，1保存jpg(丢失图片chunk信息)，2保存图片原本png"""
+    novelai_debug: bool = False
+    """是否保存追踪信息，这会在图片旁保存同名txt文件"""
+    novelai_paid: int = 0
+    """0为禁用付费模式，1为点数制，2为严格点数制，3为不限制"""
+    novelai_pure: bool = False
+    """是否启用简洁返回模式（只返回图片，不返回tag等数据）"""
+    novelai_limit: bool = True
+    """是否开启限速模式，开启后，每次调用都会检查上次调用时间，如果小于cd则会被拒绝"""
+    novelai_daylimit: int = 0
+    """每日点数限制，0为禁用限制"""
+    novelai_h: bool = False
+    """是否允许H"""
+    novelai_antireport: bool = True
+    """玄学选项。开启后，合并消息内发送者将会显示为调用指令的人而不是bot"""
+    novelai_max: int = 3
+    """每次能够生成的最大数量"""
+
+    novelai_size: int = 1024
+    """允许生成的图片最大分辨率，对应(值)^2.默认为1024（即1024*1024）。如果服务器比较寄，建议改成640（640*640）或者根据能够承受的情况修改。naifu和novelai会分别限制最大长宽为1024"""
+
+    novelai_tags: str = ""
+    """内置的tag"""
+    novelai_ntags: str = ""
+    """内置的反tag"""
+    novelai_cd: int = 60
+    """默认的cd"""
+    novelai_on: bool = True
+    """是否全局开启"""
+    novelai_revoke: int = 0
+    """是否自动撤回，该值不为0时，则为撤回时间"""
+
+    bing_key: str = None
+    """bing的翻译key"""
+    deepl_key: str = None
+    """deepL的翻译key"""
+
     def keys(cls):
-        return ("novelai_cd", "novelai_tags", "novelai_on", "novelai_ntags", "novelai_revoke")
+        return (
+            "novelai_cd",
+            "novelai_tags",
+            "novelai_on",
+            "novelai_ntags",
+            "novelai_revoke",
+        )
 
     def __getitem__(cls, item):
         return getattr(cls, item)
+
+    @validator("novelai_site")
+    def http_start(cls, v: str):
+        if not v.startswith("http"):
+            return v
+        return "http://" + v
 
     @validator("novelai_cd", "novelai_max")
     def non_negative(cls, v: int, field: ModelField):
@@ -110,8 +141,7 @@ class Config(BaseSettings):
             configdict: dict = json.loads(jsonraw)
             baseconfig = {}
             for i in cls.keys():
-                value = configdict.get(group_id, {}).get(
-                    i, dict(cls)[i])
+                value = configdict.get(group_id, {}).get(i, dict(cls)[i])
                 baseconfig[i] = value
             logger.debug(baseconfig)
             return baseconfig

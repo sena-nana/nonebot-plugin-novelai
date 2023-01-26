@@ -19,15 +19,15 @@ body:
       label: 这个 PR 带来了怎样的更改
       multiple: true
       options:
-        - 错误修复
-        - 新功能
-        - 文档/注释变更
-        - 代码重构
-        - 测试用例优化
-        - 性能优化
-        - 交互优化
-        - 依赖变化
-        - 未列出的更改类型
+        - label: 错误修复
+        - label: 新功能
+        - label: 文档/注释变更
+        - label: 代码重构
+        - label: 测试用例优化
+        - label: 性能优化
+        - label: 交互优化
+        - label: 依赖变化
+        - label: 未列出的更改类型
     validations:
       required: true
   - type: dropdown
@@ -58,10 +58,10 @@ body:
     attributes:
       label: 最终检查
       options:
-        - 我对我的代码进行了注释，特别是在难以理解的部分
-        - 我的更改需要更新文档，并且已对文档进行了相应的更改
-        - 我添加了测试并且已经在本地通过，以证明我的修复补丁或新功能有效
-        - 我已检查并确保更改没有与其他打开的 Pull Requests 重复
+        - label: 我对我的代码进行了注释，特别是在难以理解的部分
+        - label: 我的更改需要更新文档，并且已对文档进行了相应的更改
+        - label: 我添加了测试并且已经在本地通过，以证明我的修复补丁或新功能有效
+        - label: 我已检查并确保更改没有与其他打开的 Pull Requests 重复
   - type: textarea
     id: other
     attributes:
