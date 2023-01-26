@@ -8,7 +8,7 @@ from nonebot.log import logger
 from ..utils.translation import translate
 from ..utils import cs
 
-deepdanbooru = on_command(cs("tag"), aliases={"鉴赏", "查书"},block=True)
+deepdanbooru = on_command(cs(command="gettag"), aliases={"鉴赏", "查书"},block=True)
 
 
 @deepdanbooru.handle()

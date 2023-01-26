@@ -1,6 +1,6 @@
 import mistune
-from .text import Text
-from .block import Image, Inline, RawText, Block
+from text import Text
+from block import Image, Inline, RawText, Block
 
 
 class WordRenderer(mistune.AstRenderer):
@@ -71,13 +71,13 @@ class WordRenderer(mistune.AstRenderer):
         return Block(children, 1, "quote")
 
     def list(self, children, ordered, level, start=None):
-        return Block(children, level, "ordered_list" if ordered else "list")
+        for i in children:
+            i.type = "ordered_list" if ordered else "list"
+            i.level = level
+        return children
 
     def list_item(self, children, level):
-        if len(children) == 1:
-            return children.pop()
-        else:
-            return Block(children, level, "list_item")
+        return [Block(i, level, "list_item") for i in children]
 
     def task_list_item(self, children, level, checked):
         return Block(children, level, "checked" if checked else "blank")
@@ -98,4 +98,10 @@ class WordRenderer(mistune.AstRenderer):
             return method
 
     def finalize(self, data):
-        return list(data)
+        ast=[]
+        for i in data:
+            if isinstance(i, list):
+                ast.extend(i)
+            else:
+                ast.append(i)
+        return ast

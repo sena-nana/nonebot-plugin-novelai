@@ -8,7 +8,6 @@ from nonebot import on_command, get_driver
 from nonebot.permission import SUPERUSER
 from nonebot.log import logger
 from ..utils import cs, aliases, sendtosuperuser
-
 ver = Version()
 driver = get_driver()
 nickname = driver.config.nickname.pop() if driver.config.nickname else ver.package
@@ -57,7 +56,6 @@ async def install():
     )
     _, error = await proc.communicate()
     return bool(error)
-
 
 @reboot.handle()
 async def reboot_handle():

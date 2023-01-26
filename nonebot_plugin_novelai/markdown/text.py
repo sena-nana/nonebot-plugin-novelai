@@ -1,5 +1,5 @@
 import re
-from .word import Word, Base, Void, Full, LeftFull, Emoji
+from word import Word, Base, Void, Full, LeftFull, Emoji
 
 TO_HALF = r"""!?｡"#$%&'()*+,-/:;<=>@[\]^_`{|}~"""
 FROM = "！？｡＂＃＄％＆＇（）＊＋，－／：；＜＝＞＠［＼］＾＿｀｛｜｝～"
@@ -34,13 +34,13 @@ class Text:
     def __init__(self, text=Word(), type="text"):
         self.children: list[Word] = []
         if isinstance(text, str):
-            self._init(text, text_type=type)
+            self.init(text, text_type=type)
         elif isinstance(text, Base):
             self.children.append(text)
         else:
             raise ValueError
 
-    def _init(self, i, text_type="text"):
+    def init(self, i, text_type="text"):
         if isinstance(i, dict):
             j = i["text"].translate(trans)
 

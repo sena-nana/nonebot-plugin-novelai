@@ -9,7 +9,7 @@ from nonebot.permission import SUPERUSER
 from ..utils import cs
 
 jsonpath = Path("data/novelai/anlas.json").resolve()
-setanlas = on_command(cs("anlas"), aliases={"点数"}, block=True)
+setanlas = on_command(cs(command="anlas"), aliases={"点数"}, block=True)
 
 
 @setanlas.handle()

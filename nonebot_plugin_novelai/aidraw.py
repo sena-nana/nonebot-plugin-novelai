@@ -9,7 +9,7 @@ from pathlib import Path
 import aiofiles
 import aiohttp
 from aiohttp.client_exceptions import ClientConnectorError, ClientOSError
-from nonebot import get_bot, on_shell_command
+from nonebot import get_bot
 from nonebot.adapters.onebot.v11 import Bot, GroupMessageEvent, MessageSegment
 from nonebot.exception import ParserExit
 from nonebot.log import logger
@@ -21,7 +21,7 @@ from .backend import Draw
 from .config import config
 from .plugins.anlas import anlas_check, anlas_set
 from .plugins.daylimit import DayLimit
-from .utils import BASE_TAG, CHINESE_COMMAND, HTAGS, LOW_QUALITY, cs, sendtosuperuser
+from .utils import BASE_TAG, CHINESE_COMMAND, HTAGS, LOW_QUALITY, sendtosuperuser,C
 from .utils.translation import translate
 from .version import version
 
@@ -53,13 +53,11 @@ aidraw_parser.add_argument(
     "-o", "--override", "-不优化", action="store_true", help="不使用内置优化参数", dest="override"
 )
 
-aidraw_matcher = on_shell_command(
-    cs(),
+aidraw_matcher = C.shell_command(
+    "",
     aliases=CHINESE_COMMAND,
     parser=aidraw_parser,
-    block=True,
 )
-
 
 @aidraw_matcher.handle()
 async def aidraw_get(args: ParserExit = ShellCommandArgs()):
@@ -282,7 +280,7 @@ emoji = re.compile(
 
 
 async def prepocess_tags(tags: list[str]):
-    tags: str = "".join([i + " " for i in tags if isinstance(i, str)])
+    tags: str = "".join([i + " " for i in tags if isinstance(i, str)]).lower()
     tags = re.sub(emoji, "", tags)
     # 去除CQ码
     tags = re.sub("\[CQ[^\s]*?]", "", tags)

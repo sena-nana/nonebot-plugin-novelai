@@ -1,26 +1,25 @@
-from nonebot import on_command
 from nonebot.adapters.onebot.v11 import GROUP_ADMIN, GROUP_OWNER, Bot, GroupMessageEvent
 from nonebot.log import logger
 from nonebot.params import CommandArg
 from nonebot.permission import SUPERUSER
-from .utils import cs, aliases
+from .utils import aliases, C
 from .config import config
 
 # TODO
-on = on_command(
-    cs("on"),
+on = C.command(
+    "on",
     aliases=aliases("开启"),
     permission=SUPERUSER or GROUP_ADMIN or GROUP_OWNER,
     block=True,
 )
-off = on_command(
-    cs("off"),
+off = C.command(
+    "off",
     aliases=aliases("关闭"),
     permission=SUPERUSER or GROUP_ADMIN or GROUP_OWNER,
     block=True,
 )
-set = on_command(
-    cs("set"),
+set = C.command(
+    "set",
     aliases=aliases("设置"),
     permission=SUPERUSER or GROUP_ADMIN or GROUP_OWNER,
     block=True,

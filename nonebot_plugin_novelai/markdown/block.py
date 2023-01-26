@@ -1,5 +1,5 @@
-from .text import Text
-from .word import Base
+from text import Text
+from word import Base
 
 
 class Inline:
@@ -31,10 +31,15 @@ class Image(Inline):
     """
 
     src = ""
-    type = "image"
+    width = 0
+    height = 0
+    radius = 0
 
-    def __init__(self, src: str):
+    def __init__(self, src: str, width=0, height=0, radius=0):
         self.src = src
+        self.width = width
+        self.height = height
+        self.radius = radius
 
     def __repr__(self) -> str:
         return self.parser().__repr__()
@@ -46,7 +51,9 @@ class Image(Inline):
         return {
             "class": self.__class__.__name__,
             "src": self.src,
-            "type": self.type,
+            "width": self.width,
+            "height": self.height,
+            "radius": self.radius,
         }
 
 
@@ -83,6 +90,7 @@ class Block:
         children,
         level=1,
         type="paragraph",
+        style="",
     ) -> None:
         if isinstance(children, str):
             children = Text(children)
@@ -94,6 +102,7 @@ class Block:
             self.children = children
         self.type = type
         self.level = level
+        self.style = style
 
     def __str__(self) -> str:
         return "\n" + "".join(map(str, self.children))
@@ -107,4 +116,5 @@ class Block:
             "children": [i.parser() for i in self.children],
             "type": self.type,
             "level": self.level,
+            "style": self.style,
         }
