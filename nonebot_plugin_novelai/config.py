@@ -72,7 +72,7 @@ class Config(BaseSettings):
         return getattr(cls, item)
 
     @validator("novelai_site")
-    def http_start(cls, v: str):
+    def http_start(cls, v: str, filed: ModelField):
         if not v.startswith("http"):
             return v
         return "http://" + v

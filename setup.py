@@ -22,7 +22,6 @@ setup_kwargs = {
         "nonebot_plugin_novelai.locales",
         "nonebot_plugin_novelai.utils",
         "nonebot_plugin_novelai.plugins",
-        "nonebot_plugin_novelai.amusement",
         "nonebot_plugin_novelai.outofdate",
         "nonebot_plugin_novelai.web",
         "nonebot_plugin_novelai.version",

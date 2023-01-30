@@ -128,8 +128,7 @@ dmypy.json
 # Pyre type checker
 .pyre/
 .pdm.toml
-pdm.lock
-pyproject.toml
+
 test*.*
 # Logs
 logs
@@ -272,5 +271,4 @@ node_modules/
 docs/.vuepress/.cache/
 docs/.vuepress/.temp/
 docs/.vuepress/dist/
-pnpm-lock.yaml
 .VSCodeCounter
