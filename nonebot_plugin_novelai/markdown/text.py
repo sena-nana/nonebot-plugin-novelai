@@ -31,16 +31,18 @@ class Text:
     文本包装器，将文本分解
     """
 
-    def __init__(self, text=Word(), type="text"):
+    __slots__ = ("children",)
+
+    def __init__(self, text=None, type=""):
         self.children: list[Word] = []
         if isinstance(text, str):
             self.init(text, text_type=type)
         elif isinstance(text, Base):
             self.children.append(text)
-        else:
-            raise ValueError
+        elif isinstance(text, list):
+            self.children = text
 
-    def init(self, i, text_type="text"):
+    def init(self, i, text_type=""):
         if isinstance(i, dict):
             j = i["text"].translate(trans)
 
@@ -53,7 +55,9 @@ class Text:
             if raw := re.match(pattern=word_p, string=j):
                 raw_text = raw.group()
                 if self.children:
-                    if re.search(pattern=right_p, string=self.children[-1].text):
+                    if not isinstance(self.children[-1], Void) and re.search(
+                        pattern=right_p, string=self.children[-1].text
+                    ):
                         self.children.append(Void())
                     if (
                         isinstance(self.children[-1], Word)
@@ -100,7 +104,11 @@ class Text:
             else:
                 raw_text = j[0]
 
-                if self.children and re.search(right_p, self.children[-1].text):
+                if (
+                    self.children
+                    and not isinstance(self.children[-1], Void)
+                    and re.search(right_p, self.children[-1].text)
+                ):
                     self.children.append(Void())
                 if self.children and isinstance(self.children[-1], Full):
                     self.children[-1].text = self.children[-1].text + raw_text

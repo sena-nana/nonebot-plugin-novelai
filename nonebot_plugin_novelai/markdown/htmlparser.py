@@ -8,7 +8,6 @@ import mistune
 
 radius_re = re.compile(r"(?<=border-radius:)[ ]+(\d+)(px|%)(?=,)")
 
-
 def _parse_img(img):
     img_ = Image(img.get("@src"))
     img_.width = int(img.get("@width", 0))
@@ -97,8 +96,8 @@ _✨ 中文输入、对接 webui、以及你能想到的大部分功能 ✨_
 ## 📖 功能介绍
 
 - AI 绘画
-  - 支持 CD 限速和绘画队列
-  - 支持高级请求语法
+  - 支持 CD 限 _速**和绘画队列**_
+  - 支持![高级]()请求语法
   - 内置翻译 Api，自动翻译中文
 
 > 123
@@ -116,3 +115,4 @@ import time
 start=time.time()
 print(mdparser(html))
 print(time.time()-start)
+#print(mistune.markdown(html, renderer="ast", plugins=["task_lists", "strikethrough", "url"]))

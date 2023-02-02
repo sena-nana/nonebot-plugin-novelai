@@ -1,11 +1,19 @@
 class Base:
+    __slots__ = ("text", "type")
 
-    text = ""
-    type = ""
-
-    def __init__(self, text: str = "", type: str = "text"):
+    def __init__(
+        self,
+        text: str = "",
+        type: set = set(),
+    ):
         self.text = text
-        self.type = type
+        if type:
+            if isinstance(type, str):
+                self.type = {type}
+            else:
+                self.type = type
+        else:
+            self.type = set()
 
     def __repr__(self) -> str:
         return self.parser().__repr__()
@@ -14,7 +22,8 @@ class Base:
         return self.text
 
     def parser(self):
-        return {"class": self.__class__.__name__, "type": self.type, "text": self.text}
+        out = {"class": self.__class__.__name__, "text": self.text, "type": self.type}
+        return out
 
 
 class Word(Base):
@@ -27,9 +36,6 @@ class Void(Base):
     """
     填白类
     """
-
-    def __init__(self):
-        pass
 
     def __str__(self) -> str:
         return " "

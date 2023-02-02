@@ -1,32 +1,67 @@
-from dataclasses import dataclass
-import mistune
-from renderer import WordRenderer
-import textwrap
+from htmlparser import htmlparser
 from textwrap import dedent, indent
 from PIL import Image, ImageFont, ImageDraw
 
 _whitespace = "\t\n\x0b\x0c\r "
 
 
-@dataclass
-class TextRenderer:
-    font: str = "Consolas"
-    fontsize: int = 16
+class BlockRenderer:
+    __slots__ = ("style", "font", "color", "background-color", "margin", "align")
+
+    def __init__(
+        self,
+        style="normal",
+        font="Consolas",
+        color="#24292f",
+        background_color=None,
+        margin=None,
+        align=None,
+    ):
+        self.style = [style
+        self.font = font
+        self.color = color
+        self.background_color = background_color
+        self.margin = margin
+        self.align = align
+
+    def __repr__(self):
+        return self.parser().__repr__()
+
+    def parser(self):
+        return {
+            "class": self.__class__.__name__,
+            "fontweight": self.fontweight,
+            "font": self.font,
+            "color": self.color,
+            "background-color": self.background_color,
+            "margin": self.margin,
+            "align": self.align,
+        }
 
 
 class MarkdownRenderer:
-    def __init__(self, font="Consolas", fontsize=16, width=70):
-        self.paragraph = TextRenderer()
-        self.header = TextRenderer()
-        self.header2 = TextRenderer()
-        self.header3 = TextRenderer()
-        self.list = TextRenderer()
-        self.tasklist = TextRenderer()
+    __slots__ = (
+        "paragraph",
+        "header",
+        "header2",
+        "header3",
+        "list",
+        "tasklist",
+        "lineheight",
+        "font",
+        "fontsize",
+    )
 
-    def __getattribute__(self, __name: str):
-        if __name not in self.__dict__:
-            self.__dict__[__name] = TextRenderer()
-        return self.__dict__[__name]
+    def __init__(self, font="Consolas", fontsize=16, lineheight=1.5):
+        self.font: str = font
+        self.fontsize: int = fontsize
+        self.lineheight: float = lineheight
+        self.p = BlockRenderer()
+        self.h1 = BlockRenderer()
+        self.h2 = BlockRenderer()
+        self.h3 = BlockRenderer()
+        self.list = BlockRenderer()
+        self.tasklist = BlockRenderer()
 
 
 class MarkdownWrapper:
@@ -44,6 +79,17 @@ class MarkdownWrapper:
     :param renderer: MarkdownRenderer实例
     """
 
+    __slots__ = (
+        "width",
+        "initial_indent",
+        "subsequent_indent",
+        "expand_tabs",
+        "replace_whitespace",
+        "tabsize",
+        "max_lines",
+        "placeholder",
+        "renderer",
+    )
     unicode_whitespace_trans = {}
     uspace = ord(" ")
     for x in _whitespace:
@@ -70,7 +116,7 @@ class MarkdownWrapper:
         self.tabsize = tabsize
         self.max_lines = max_lines
         self.placeholder = placeholder
-        self.renderer = renderer
+        self.renderer = renderer or MarkdownRenderer()
 
     def wrap(self, text: str):
         """
@@ -93,11 +139,7 @@ class MarkdownWrapper:
                 indent = self.initial_indent
             if len(indent) + len(self.placeholder.lstrip()) > self.width:
                 raise ValueError("placeholder too large for max width")
-        ast = mistune.markdown(
-            text,
-            renderer=WordRenderer(),
-            plugins=["task_lists", "strikethrough", "url"],
-        )
+        ast = htmlparser(text)
         return ast
 
     def fill(self, text):
@@ -110,11 +152,7 @@ class MarkdownWrapper:
         """
         返回解析后的ast
         """
-        ast = mistune.markdown(
-            text,
-            renderer=WordRenderer(),
-            plugins=["task_lists", "strikethrough", "url"],
-        )
+        ast = htmlparser(text)
         return [i.parser() for i in ast]
 
 

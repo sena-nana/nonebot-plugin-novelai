@@ -11,7 +11,12 @@ class WordRenderer(mistune.AstRenderer):
 
     def link(self, link, children=None, title=None):
         if isinstance(children, list):
-            return Text(str(children[0]), "link")
+            a = children.pop(0)
+            while children:
+                a.children.extend(children.pop(0).children)
+            for i in a.children:
+                i.type.add("link")
+            return a
         else:
             return Text(link, type="link")
 
@@ -25,66 +30,83 @@ class WordRenderer(mistune.AstRenderer):
         return Inline("linebreak")
 
     def emphasis(self, children):
-        if len(children) == 1:
-            return children.pop()
+        if isinstance(children, list):
+            a = children.pop(0)
+            while children:
+                a.children.extend(children.pop(0).children)
         else:
-            a = Text()
-            a.children = children
-            for i in a.children:
-                i.type = "emphasis"
-            return a
+            a = children
+        for i in a.children:
+            i.type.add("emphasis")
+        return a
 
     def inline_html(self, html):
         return RawText(html, "html")
 
     def heading(self, children, level):
-        return Block(children, level, "heading")
+        return Block(children, "h" + str(level))
 
     def newline(self):
-        return Block([], 1, "newline")
+        return Block([], "newline")
 
     def thematic_break(self):
         return Inline("thematic_break")
 
     def paragraph(self, children):
-        return Block(children, 1, "paragraph")
+        if isinstance(children, Block):
+            return children
+        a = []
+        for i in children:
+            a.extend(i.children)
+        return Block(a, "paragraph")
 
     def block_code(self, children, info=None):
-        return Block(children, 1, "code")
+        return Block(children, "code")
 
     def block_html(self, children):
-        return Block(children, 1, "html")
+        return Block(children, "html")
 
     def block_text(self, children):
-        if len(children) == 1:
-            return children.pop()
+        if isinstance(children, list):
+            a = []
+            while children:
+                if a and isinstance(children[0], Text) and isinstance(a[-1], Text):
+                    a[-1].children.extend(children.pop(0).children)
+                else:
+                    a.append(children.pop(0))
+
         else:
-            return Text("".join(map(str, children)))
+            a = children
+        return Block(a)
 
     def strong(self, children):
-        if len(children) == 1:
-            return children.pop()
+        if isinstance(children, list):
+            a = children.pop(0)
+            while children:
+                a.children.extend(children.pop(0).children)
         else:
-            return Text("".join(map(str, children)), "strong")
+            a = children
+        for i in a.children:
+            i.type.add("strong")
+        return a
 
     def block_quote(self, children):
-        return Block(children, 1, "quote")
+        return Block(children, "quote")
 
     def list(self, children, ordered, level, start=None):
         for i in children:
             i.type = "ordered_list" if ordered else "list"
-            i.level = level
         return children
 
     def list_item(self, children, level):
-        return [Block(i, level, "list_item") for i in children]
+        return [Block(i) if i.type != "p" else i for i in children]
 
     def task_list_item(self, children, level, checked):
-        return Block(children, level, "checked" if checked else "blank")
+        return Block(children, "checked" if checked else "blank")
 
     def _create_default_method(self, name):
         def __ast(children):
-            return Block(children, 1, name)
+            return Block(children, name)
 
         return __ast
 
@@ -98,7 +120,7 @@ class WordRenderer(mistune.AstRenderer):
             return method
 
     def finalize(self, data):
-        ast=[]
+        ast = []
         for i in data:
             if isinstance(i, list):
                 ast.extend(i)
