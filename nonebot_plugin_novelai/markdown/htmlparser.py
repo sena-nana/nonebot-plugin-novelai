@@ -76,7 +76,7 @@ def _mdparser(ast, div: bool = False):
     return parser
 
 
-def mdparser(html):
+def htmlparser(html):
     tree = etree.HTML(html)
     a = xmltodict.parse(etree.tostring(tree, encoding="utf-8").decode("utf-8"))
     return _mdparser(a["html"]["body"])
@@ -90,7 +90,7 @@ html = """
 
 # Nonebot-plugin-novelai
 
-_✨ 中文输入、对接 webui、以及你能想到的大部分功能 ✨_
+_✨ 中文输入、对接 webui、以及你能想到的なの七アイ大部分功能 ✨_
 
 
 ## 📖 功能介绍
@@ -113,6 +113,5 @@ _✨ 中文输入、对接 webui、以及你能想到的大部分功能 ✨_
 """
 import time
 start=time.time()
-print(mdparser(html))
+print(htmlparser(html))
 print(time.time()-start)
-#print(mistune.markdown(html, renderer="ast", plugins=["task_lists", "strikethrough", "url"]))

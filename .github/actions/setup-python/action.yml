@@ -16,5 +16,8 @@ runs:
         architecture: "x64"
         cache: "pip"
 
-    - run: pip setup.py install
+    - run: pip install pdm
+      shell: bash
+
+    - run: pdm install
       shell: bash

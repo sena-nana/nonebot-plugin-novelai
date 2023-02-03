@@ -1,6 +1,7 @@
 import mistune
 from text import Text
 from block import Image, Inline, RawText, Block
+from word import Void,Emoji
 
 
 class WordRenderer(mistune.AstRenderer):
@@ -15,7 +16,8 @@ class WordRenderer(mistune.AstRenderer):
             while children:
                 a.children.extend(children.pop(0).children)
             for i in a.children:
-                i.type.add("link")
+                if not isinstance(i,(Void,Emoji)):
+                    i.type.add("link")
             return a
         else:
             return Text(link, type="link")
@@ -37,7 +39,8 @@ class WordRenderer(mistune.AstRenderer):
         else:
             a = children
         for i in a.children:
-            i.type.add("emphasis")
+            if not isinstance(i,(Void,Emoji)):
+                i.type.add("emphasis")
         return a
 
     def inline_html(self, html):
@@ -58,7 +61,7 @@ class WordRenderer(mistune.AstRenderer):
         a = []
         for i in children:
             a.extend(i.children)
-        return Block(a, "paragraph")
+        return Block(a, "p")
 
     def block_code(self, children, info=None):
         return Block(children, "code")
@@ -87,7 +90,8 @@ class WordRenderer(mistune.AstRenderer):
         else:
             a = children
         for i in a.children:
-            i.type.add("strong")
+            if not isinstance(i,(Void,Emoji)):
+                i.type.add("strong")
         return a
 
     def block_quote(self, children):

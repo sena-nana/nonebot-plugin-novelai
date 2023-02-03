@@ -1,59 +1,41 @@
 from htmlparser import htmlparser
 from textwrap import dedent, indent
 from PIL import Image, ImageFont, ImageDraw
-
+from block import Block, Inline, Text, RawText, Image
+from text import Text
 _whitespace = "\t\n\x0b\x0c\r "
 
 
 class BlockRenderer:
-    __slots__ = ("style", "font", "color", "background-color", "margin", "align")
+    __slots__ = ()
+    font = ""
+    color = ""
+    background_color = ""
+    margin = None
+    align = None
+    fonsize = None
+    lineheight = None
 
-    def __init__(
-        self,
-        style="normal",
-        font="Consolas",
-        color="#24292f",
-        background_color=None,
-        margin=None,
-        align=None,
-    ):
-        self.style = [style
-        self.font = font
-        self.color = color
-        self.background_color = background_color
-        self.margin = margin
-        self.align = align
+    async def __call__(self, ast: Block, figure, state: dict):
+        await MarkdownRenderer.next(ast.children, state)
 
-    def __repr__(self):
-        return self.parser().__repr__()
 
-    def parser(self):
-        return {
-            "class": self.__class__.__name__,
-            "fontweight": self.fontweight,
-            "font": self.font,
-            "color": self.color,
-            "background-color": self.background_color,
-            "margin": self.margin,
-            "align": self.align,
-        }
+async def next(ast, figure, state, calc_only=False):
+    for i in ast:
+        if isinstance(i, (Block, Inline)):
+            await MarkdownRenderer.__getattribute__(i.type)(i, figure, state)
+        elif isinstance(i, Text):
+            await MarkdownRenderer.text(i, figure, state)
 
 
 class MarkdownRenderer:
-    __slots__ = (
-        "paragraph",
-        "header",
-        "header2",
-        "header3",
-        "list",
-        "tasklist",
-        "lineheight",
-        "font",
-        "fontsize",
-    )
-
-    def __init__(self, font="Consolas", fontsize=16, lineheight=1.5):
-        self.font: str = font
+    def __init__(
+        self,
+        default_font="Consolas",
+        fontsize=16,
+        lineheight=1.5,
+    ):
+        self.font: str = {"default": default_font}
         self.fontsize: int = fontsize
         self.lineheight: float = lineheight
         self.p = BlockRenderer()
@@ -62,6 +44,8 @@ class MarkdownRenderer:
         self.h3 = BlockRenderer()
         self.list = BlockRenderer()
         self.tasklist = BlockRenderer()
+        self.text = BlockRenderer()
+        self.next = next
 
 
 class MarkdownWrapper:
@@ -106,7 +90,6 @@ class MarkdownWrapper:
         *,
         max_lines=None,
         placeholder=" [...]",
-        renderer=None,
     ):
         self.width = width
         self.initial_indent = initial_indent
@@ -116,7 +99,7 @@ class MarkdownWrapper:
         self.tabsize = tabsize
         self.max_lines = max_lines
         self.placeholder = placeholder
-        self.renderer = renderer or MarkdownRenderer()
+        self.renderer = MarkdownRenderer()
 
     def wrap(self, text: str):
         """

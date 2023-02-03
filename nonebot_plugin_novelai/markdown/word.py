@@ -1,10 +1,11 @@
 class Base:
-    __slots__ = ("text", "type")
+    __slots__ = ("text", "type", "lang")
 
     def __init__(
         self,
         text: str = "",
         type: set = set(),
+        lang: str = "",
     ):
         self.text = text
         if type:
@@ -14,6 +15,7 @@ class Base:
                 self.type = type
         else:
             self.type = set()
+        self.lang = lang
 
     def __repr__(self) -> str:
         return self.parser().__repr__()
@@ -22,7 +24,12 @@ class Base:
         return self.text
 
     def parser(self):
-        out = {"class": self.__class__.__name__, "text": self.text, "type": self.type}
+        out = {
+            "class": self.__class__.__name__,
+            "text": self.text,
+            "type": self.type,
+            "lang": self.lang,
+        }
         return out
 
 
@@ -36,6 +43,11 @@ class Void(Base):
     """
     填白类
     """
+
+    __slots__ = ()
+
+    def __init__(self):
+        pass
 
     def __str__(self) -> str:
         return " "
@@ -60,3 +72,14 @@ class Emoji(Full):
     """
     Emoji类，用于表示Emoji等方形字符
     """
+
+    __slots__ = ("src",)
+
+    def __init__(self, src: str):
+        self.src = src
+
+    def __str__(self) -> str:
+        return self.src
+
+    def parser(self):
+        return {"class": self.__class__.__name__, "src": self.src}

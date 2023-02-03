@@ -24,6 +24,10 @@ emoji = re.compile(
     "\u2600-\u2B55"
     "\U00010000-\U0010ffff]+"
 )
+ch = re.compile("[\u4e00-\u9fff]+")
+jp = re.compile(
+    "[" "\u3040-\u30ff" "\u31f0-\u31ff" "\u3300-\u33ff" "\u3400-\u4dbf" "]+"
+)
 
 
 class Text:
@@ -43,6 +47,14 @@ class Text:
             self.children = text
 
     def init(self, i, text_type=""):
+        def cjk(j):
+            if a := re.match(pattern=ch, string=j):
+                return a.group(), "ch"
+            elif a := re.match(pattern=jp, string=j):
+                return a.group(), "jp"
+            else:
+                return None, None
+
         if isinstance(i, dict):
             j = i["text"].translate(trans)
 
@@ -99,10 +111,11 @@ class Text:
                 self.children.append(Void())
             elif raw := re.match(pattern=emoji, string=j):
                 raw_text = raw.group()
-
-                self.children.append(Emoji(raw_text, text_type))
+                self.children.append(Emoji(raw_text))
             else:
-                raw_text = j[0]
+                raw_text, lang = cjk(j)
+                if not raw_text:
+                    raw_text = j[0]
 
                 if (
                     self.children
@@ -110,10 +123,14 @@ class Text:
                     and re.search(right_p, self.children[-1].text)
                 ):
                     self.children.append(Void())
-                if self.children and isinstance(self.children[-1], Full):
+                if (
+                    self.children
+                    and isinstance(self.children[-1], Full)
+                    and self.children[-1].lang == lang
+                ):
                     self.children[-1].text = self.children[-1].text + raw_text
                 else:
-                    self.children.append(Full(raw_text, text_type))
+                    self.children.append(Full(raw_text, text_type, lang))
             j = j.replace(raw_text, "", 1)
 
     def __repr__(self) -> str:
