@@ -28,8 +28,12 @@ async def translate_bing(text: str, to: str):
     key = config.bing_key
     if not key:
         return None
+    region = config.bing_region
+    if not region:
+        return None
     header = {
         "Ocp-Apim-Subscription-Key": key,
+        "Ocp-Apim-Subscription-Region": region,
         "Content-Type": "application/json",
     }
     async with aiohttp.ClientSession() as session:
