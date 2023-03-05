@@ -55,7 +55,8 @@ class Config(BaseSettings):
     """是否自动撤回，该值不为0时，则为撤回时间"""
 
     bing_key: str = None
-    """bing的翻译key"""
+    bing_region: str = None
+    """bing的翻译key和region"""
     deepl_key: str = None
     """deepL的翻译key"""
 
