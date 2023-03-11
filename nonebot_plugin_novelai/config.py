@@ -18,9 +18,9 @@ nickname = (
 
 
 class Config(BaseSettings):
-    novelai: dict = {"novelai": ""}
+    novelai: dict = {"sd": ""}
     """你的服务器配置信息"""
-
+    novelai_webui_config: dict = {}
     novelai_save: int = 1
     """是否保存图片至本地,0为不保存，1保存jpg(丢失图片chunk信息)，2保存图片原本png"""
     novelai_debug: bool = False
@@ -78,7 +78,7 @@ class Config(BaseSettings):
             return v
         return "http://" + v
 
-    @validator("novelai_cd", "novelai_max")
+    @validator("novelai_max")
     def non_negative(cls, v: int, field: ModelField):
         if v < 1:
             return field.default
