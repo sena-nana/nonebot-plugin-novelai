@@ -177,7 +177,7 @@ async def fifo_gennerate(fifo: AIDRAW = None, bot: Bot = None):
             )
         else:
             logger.info(f"队列剩余{wait_len()}人 | 生成完毕：{fifo}")
-            if await config.get_value(fifo.group_id, "pure"):
+            if config.novelai_pure:
                 message = MessageSegment.at(fifo.user_id)
                 for i in im["image"]:
                     message += i
