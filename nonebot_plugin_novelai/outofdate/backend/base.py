@@ -15,7 +15,6 @@ from ..utils import SHAPE_MAP
 
 class DrawBase:
     MAX_RESOLUTION: int = 16
-    sampler: str
     MAX_STEPS: int = 50
 
     def __init__(
@@ -240,7 +239,6 @@ class DrawBase:
             "scale",
             "strength",
             "noise",
-            "sampler",
             "model",
             "steps",
             "width",
