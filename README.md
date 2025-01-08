@@ -5,6 +5,8 @@
 
 <div align="center">
 
+
+
 # Nonebot-plugin-novelai
 
 _✨ 中文输入、对接 webui、以及你能想到的大部分功能 ✨_
@@ -22,6 +24,7 @@ _✨ 中文输入、对接 webui、以及你能想到的大部分功能 ✨_
 </div>
 
 > 请不要直接clone代码，主分支代码仅用作最新feature的体验，我并不保证其能够稳定运行，在重构期间甚至可能无法启动。如有下载必要，请从release中下载源代码
+# 该项目由于长久失修（作者打工）已经不再维护，请使用[fork](https://github.com/DiaoDaiaChan/nonebot-plugin-stable-diffusion-diao)版本
 
 ## 📖 功能介绍
 
